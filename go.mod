@@ -1,4 +1,4 @@
-module github.com/windingtheropes/budget/web
+module github.com/windingtheropes/budget
 
 go 1.24.0
 
