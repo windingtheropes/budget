@@ -5,7 +5,7 @@ import (
 	// "crypto"
 )
 
-type AuthForm struct {
+type NewAccountForm struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
@@ -26,7 +26,7 @@ type LoginResponse struct {
 
 func LoadRoutes(engine *gin.Engine) {
 	engine.POST("/account/new", func(ctx *gin.Context) {
-		body := AuthForm{}
+		body := NewAccountForm{}
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			ctx.JSON(400, GenericResponse{
 				Code:    400,
