@@ -10,9 +10,10 @@ import (
 func main() {
 	dotenv.Init()
 	based.InitDB()
-	
+
+	// db := based.DB();
 	engine := gin.Default();
+
 	auth.LoadRoutes(engine);
-	
 	engine.Run("localhost:3000");
 }
