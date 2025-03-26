@@ -1,0 +1,2 @@
+POST /api/account/new
+PUT /api/account/login

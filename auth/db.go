@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"github.com/windingtheropes/budget/based"
-    "github.com/windingtheropes/budget/argent"
+    "github.com/windingtheropes/budget/types"
 )
 
-// get a user based on email
-func GetUser(email string) ([]argent.User, error) {
+func GetUser(email string) ([]types.User, error) {
     // A users slice to store criteria matching users
-    var users []argent.User
+    var users []types.User
 
     rows, err := based.DB().Query("SELECT * FROM usr WHERE email = ?", email)
 	// Catch error with query
@@ -21,7 +20,7 @@ func GetUser(email string) ([]argent.User, error) {
 
     // Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
-        var usr argent.User
+        var usr types.User
         if err := rows.Scan(&usr.Id, &usr.Name, &usr.Email, &usr.Password); err != nil {
 			// Catch error casting to struct
             return nil, fmt.Errorf("getUser %q: %v", email, err)
@@ -68,9 +67,9 @@ func NewSession(user_id int) ([]string, int64, error) {
 }
 
 // get a session
-func GetSession(token string) ([]argent.Session, error) {
+func GetSession(token string) ([]types.Session, error) {
     // store matching sessions in the slcie
-    var sessions []argent.Session
+    var sessions []types.Session
 
     rows, err := based.DB().Query("SELECT * FROM session WHERE token = ?", token)
 	// Catch error with query
@@ -82,7 +81,7 @@ func GetSession(token string) ([]argent.Session, error) {
 
     // Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
-        var session argent.Session
+        var session types.Session
         if err := rows.Scan(&session.Id, &session.Token, &session.User_Id); err != nil {
 			// Catch error casting to struct
             return nil, fmt.Errorf("getSession %q: %v", "TOKEN", err)

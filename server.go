@@ -16,6 +16,6 @@ func main() {
 
 	auth.LoadRoutes(engine);
 	argent.LoadRoutes(engine);
-	
+
 	engine.Run("localhost:3000");
 }

@@ -1,6 +1,7 @@
 package json
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/windingtheropes/budget/types"
 )
 
 type GenericResponse struct {
@@ -16,6 +17,9 @@ type ListResponse struct {
 }
 type ValueResponse struct {
 	Value string `json:"value"`
+}
+type EntryResponse struct {
+	Value []types.BudgetEntry
 }
 
 func NewResponse(ctx *gin.Context, code int, message string) {

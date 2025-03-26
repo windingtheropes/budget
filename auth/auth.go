@@ -3,18 +3,20 @@ package auth
 import (
 	"crypto/rand"
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/windingtheropes/budget/json"
 	b64 "encoding/base64"
 	"log"
+
+	"github.com/windingtheropes/budget/json"
 )
 
 // Authentication routes
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
-	engine.POST("/account/new", func(ctx *gin.Context) {
+	engine.POST("/api/account/new", func(ctx *gin.Context) {
 		body := json.NewAccountForm{}
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.NewResponse(ctx, 400, "Invalid JSON.");
@@ -44,7 +46,7 @@ func LoadRoutes(engine *gin.Engine) {
 	})
 
 	// Login gives a session token
-	engine.PUT("/account/login", func(ctx *gin.Context) {
+	engine.PUT("/api/account/login", func(ctx *gin.Context) {
 		body := json.LoginForm{}
 		// Bind the json to the loginform body, or return an error
 		if err := ctx.ShouldBindJSON(&body); err != nil {
@@ -102,6 +104,21 @@ func IsSession(token string) (bool, int) {
 	session := sessions[0];
 	return true, session.User_Id
 }
+func GetAuthorization(ctx *gin.Context) int {
+	a := ctx.Request.Header.Get("Authorization");
+	authorization := strings.Split(a, " ")
+	if authorization[0] != "Bearer" || len(authorization) != 2 {
+		json.NewResponse(ctx, 400, "Invalid authorization header.")
+	}
+	token := authorization[1]
+
+	isValid, user_id := IsSession(token); 
+	if !isValid {
+		json.NewResponse(ctx, 403, "Not allowed.")
+	} 
+	return user_id
+}
+
 func GenToken(length int) string {
 	var keyBytes = make([]byte, length);
 	rand.Read(keyBytes);
