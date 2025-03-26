@@ -16,7 +16,7 @@ func LoadRoutes(engine *gin.Engine) {
 	// New Account
 	engine.POST("/account/new", func(ctx *gin.Context) {
 		body := json.NewAccountForm{}
-		if err := ctx.BindJSON(&body); err != nil {
+		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.NewResponse(ctx, 400, "Invalid JSON.");
 			return
 		}
@@ -47,7 +47,7 @@ func LoadRoutes(engine *gin.Engine) {
 	engine.PUT("/account/login", func(ctx *gin.Context) {
 		body := json.LoginForm{}
 		// Bind the json to the loginform body, or return an error
-		if err := ctx.BindJSON(&body); err != nil {
+		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.NewResponse(ctx, 400, "Invalid JSON.");
 			return
 		}
