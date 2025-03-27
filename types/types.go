@@ -1,5 +1,14 @@
 package types
 
+type UserIdentifier interface {
+	Email | UserID
+}
+type TagIdentifier interface {
+	TagID | UserID | TagName
+}
+
+type UserID int;
+type Email string;
 type User struct {
 	Id int
 	Name string
@@ -26,8 +35,11 @@ type TagAssignment struct {
 	Tag_Id int
 	Entry_Id int
 }
+
+type TagID int;
+type TagName string;
 type Tag struct {
 	Id int
-	Name int
+	Name string
 	User_Id int
 }
