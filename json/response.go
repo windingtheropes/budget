@@ -22,11 +22,13 @@ type ValueResponse struct {
 type EntryResponse struct {
 	Value []types.BudgetEntry
 }
+type TagResponse struct {
+	Value []types.Tag
+}
 
 func AbortWithStatusMessage(ctx *gin.Context, code int, message string) {
-	ctx.JSON(code, GenericResponse{
+	ctx.AbortWithStatusJSON(code, GenericResponse{
 		Code:    code,
 		Message: message,
 	})
-	ctx.Abort()
 }

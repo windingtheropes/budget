@@ -27,13 +27,13 @@ func getSessionFromRequest(ctx *gin.Context) types.Session {
 	if len(s) == 0 {
 		// No session exists
 		json.AbortWithStatusMessage(ctx, 403, "Not allowed.")
-	}
+	}  
 	session := s[0]
 	if !session.IsValid() {
 		// Token expired
 		json.AbortWithStatusMessage(ctx, 403, "Not allowed.")
 	}
-	return s[0]
+	return session
 }
 // Full authentication pipeline, return a user
 func GetUserFromRequest(ctx *gin.Context) types.User {
