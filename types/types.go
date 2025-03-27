@@ -6,13 +6,12 @@ type User struct {
 	Email string
 	Password string
 }
-
 type Session struct {
 	Id int
 	Token string
 	User_Id int
+	Expiry int64
 }
-
 type Currency struct {
 	Id string
 }
