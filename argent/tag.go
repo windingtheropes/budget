@@ -3,8 +3,8 @@ package argent
 import ("log"
 "github.com/windingtheropes/budget/types")
 
-func TagExists(tag_name string, user_id types.UserID) bool {
-	tags, err := GetTag(user_id);
+func TagExists(tag_name string, user_id int) bool {
+	tags, err := GetTag(types.UserID(user_id));
 	if err != nil {
 		log.Fatal(err)
 		return false

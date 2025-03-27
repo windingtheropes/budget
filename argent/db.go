@@ -24,7 +24,7 @@ func NewEntry(user_id int, amount float64, currency string) (int64, error) {
 }
 // Create a new tag.
 func NewTag(user_id int, name string) (int64, error) {
-    result, err := based.DB().Exec("INSERT INTO tag (name, user_id) VALUES (?,?)", user_id, name, user_id)
+    result, err := based.DB().Exec("INSERT INTO tag (tag_name, user_id) VALUES (?,?)", name, user_id)
 	if err != nil {
         return 0,fmt.Errorf("newTag: %v", err)
     }
