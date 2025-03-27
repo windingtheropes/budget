@@ -38,7 +38,7 @@ func getSessionFromRequest(ctx *gin.Context) types.Session {
 // Full authentication pipeline, return a user
 func GetUserFromRequest(ctx *gin.Context) types.User {
 	session := getSessionFromRequest(ctx);
-	usrs, err := GetUser(session.User_Id);
+	usrs, err := GetUser(types.UserID(session.User_Id));
 	if err != nil {
 		json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 	}

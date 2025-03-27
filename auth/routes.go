@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"github.com/windingtheropes/budget/json"
+	"github.com/windingtheropes/budget/types"
 )
 
 // Authentication routes
@@ -17,7 +18,7 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 
-		users, err := GetUser(body.Email)
+		users, err := GetUser(types.Email(body.Email))
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -49,7 +50,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 
 		// catch unknown errors
-		users, err := GetUser(body.Email)
+		users, err := GetUser(types.Email(body.Email))
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")

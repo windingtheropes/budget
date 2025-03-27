@@ -11,24 +11,24 @@ import (
 	"github.com/windingtheropes/budget/types"
 )
 
-// Get a user by a key, either string (email) or int (id)
-func GetUser[K UserIdentifier](key K) ([]types.User, error) {
+// Get a user by a UserIdentifier, UserID | Email
+func GetUser[T types.UserIdentifier](identifier T) ([]types.User, error) {
     // A users slice to store criteria matching users
     var users []types.User
 
     var rows *sql.Rows;
     var err error;
-
+    
     // Change query based on the type of k, string is email, int is id
-    if reflect.TypeOf(key).Kind() == reflect.Int {
-        rows, err = based.DB().Query("SELECT * FROM usr WHERE id = ?", key)
-    } else if reflect.TypeOf(key).Kind() == reflect.String {
-        rows, err = based.DB().Query("SELECT * FROM usr WHERE email = ?", key)
+    if reflect.TypeOf(identifier) == reflect.TypeOf(types.UserID(0)) {
+        rows, err = based.DB().Query("SELECT * FROM usr WHERE id = ?", identifier)
+    } else if reflect.TypeOf(identifier) == reflect.TypeOf(types.Email("")) {
+        rows, err = based.DB().Query("SELECT * FROM usr WHERE email = ?", identifier)
     }
 
 	// Catch error with query
     if err != nil {
-        return nil, fmt.Errorf("getUser %q: %v", key, err)
+        return nil, fmt.Errorf("getUser %q: %v", identifier, err)
     }
     defer rows.Close()
 
@@ -37,13 +37,13 @@ func GetUser[K UserIdentifier](key K) ([]types.User, error) {
         var usr types.User
         if err := rows.Scan(&usr.Id, &usr.Name, &usr.Email, &usr.Password); err != nil {
 			// Catch error casting to struct
-            return nil, fmt.Errorf("getUser %q: %v", key, err)
+            return nil, fmt.Errorf("getUser %q: %v", identifier, err)
         }
         users = append(users, usr)
     }
 	// Catch a row error
     if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("getUser %q: %v", key, err)
+        return nil, fmt.Errorf("getUser %q: %v", identifier, err)
     }
     return users, nil
 }
@@ -51,7 +51,7 @@ func GetUser[K UserIdentifier](key K) ([]types.User, error) {
 // Add a user, returning its id
 func AddUser(full_name string, email string, pass_hashed string) (int64, error) {
     result, err := based.DB().Exec("INSERT INTO usr (full_name, email, pass) VALUES (?,?,?)", full_name, email, pass_hashed)
-	if err != nil {
+    if err != nil {
         return 0, fmt.Errorf("addUser: %v", err)
     }
     id, err := result.LastInsertId()
