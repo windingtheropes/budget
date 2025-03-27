@@ -2,19 +2,33 @@ package auth
 
 import (
 	"fmt"
+	"reflect"
+	"time"
+
+	"database/sql"
 
 	"github.com/windingtheropes/budget/based"
-    "github.com/windingtheropes/budget/types"
+	"github.com/windingtheropes/budget/types"
 )
 
-func GetUser(email string) ([]types.User, error) {
+// Get a user by a key, either string (email) or int (id)
+func GetUser[K UserIdentifier](key K) ([]types.User, error) {
     // A users slice to store criteria matching users
     var users []types.User
 
-    rows, err := based.DB().Query("SELECT * FROM usr WHERE email = ?", email)
+    var rows *sql.Rows;
+    var err error;
+
+    // Change query based on the type of k, string is email, int is id
+    if reflect.TypeOf(key).Kind() == reflect.Int {
+        rows, err = based.DB().Query("SELECT * FROM usr WHERE id = ?", key)
+    } else if reflect.TypeOf(key).Kind() == reflect.String {
+        rows, err = based.DB().Query("SELECT * FROM usr WHERE email = ?", key)
+    }
+
 	// Catch error with query
     if err != nil {
-        return nil, fmt.Errorf("getUser %q: %v", email, err)
+        return nil, fmt.Errorf("getUser %q: %v", key, err)
     }
     defer rows.Close()
 
@@ -23,18 +37,18 @@ func GetUser(email string) ([]types.User, error) {
         var usr types.User
         if err := rows.Scan(&usr.Id, &usr.Name, &usr.Email, &usr.Password); err != nil {
 			// Catch error casting to struct
-            return nil, fmt.Errorf("getUser %q: %v", email, err)
+            return nil, fmt.Errorf("getUser %q: %v", key, err)
         }
         users = append(users, usr)
     }
 	// Catch a row error
     if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("getUser %q: %v", email, err)
+        return nil, fmt.Errorf("getUser %q: %v", key, err)
     }
     return users, nil
 }
 
-// add a user and return its id
+// Add a user, returning its id
 func AddUser(full_name string, email string, pass_hashed string) (int64, error) {
     result, err := based.DB().Exec("INSERT INTO usr (full_name, email, pass) VALUES (?,?,?)", full_name, email, pass_hashed)
 	if err != nil {
@@ -47,11 +61,11 @@ func AddUser(full_name string, email string, pass_hashed string) (int64, error) 
     return id, nil
 }
 
-// new session, returns the token, id
-func NewSession(user_id int) ([]string, int64, error) {
+// New session given a user_id, and a lifetime in seconds
+func NewSession(user_id int, lifetime int) ([]string, int64, error) {
 	var token string = GenToken(64);
-
-    result, err := based.DB().Exec("INSERT INTO session (token, user_id) VALUES (?,?)", token, user_id)
+    expiry := time.Now().Unix() + int64(lifetime)
+    result, err := based.DB().Exec("INSERT INTO session (token, user_id, expiry) VALUES (?,?,?)", token, user_id, expiry)
 	if err != nil {
         return nil, 0, fmt.Errorf("newSession: %v", err)
     }
@@ -65,8 +79,7 @@ func NewSession(user_id int) ([]string, int64, error) {
 
     return res, id, nil
 }
-
-// get a session
+// Get a session in the database by the oken
 func GetSession(token string) ([]types.Session, error) {
     // store matching sessions in the slcie
     var sessions []types.Session
@@ -82,7 +95,7 @@ func GetSession(token string) ([]types.Session, error) {
     // Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
         var session types.Session
-        if err := rows.Scan(&session.Id, &session.Token, &session.User_Id); err != nil {
+        if err := rows.Scan(&session.Id, &session.Token, &session.User_Id, &session.Expiry); err != nil {
 			// Catch error casting to struct
             return nil, fmt.Errorf("getSession %q: %v", "TOKEN", err)
         }
