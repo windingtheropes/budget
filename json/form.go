@@ -11,8 +11,12 @@ type LoginForm struct {
 }
 type TagForm struct {
 	Token string `json:"token" binding:"required"`
-	Name string `json:"name" bindings:"required"`
+	Name  string `json:"name" bindings:"required"`
 }
 type ValueForm struct {
 	Value string `json:"value" binding:"required"`
+}
+type NewEntryForm struct {
+	Amount   float64 `json:"amount" binding:"required"`
+	Currency string  `json:"currency" binding:"required"`
 }
