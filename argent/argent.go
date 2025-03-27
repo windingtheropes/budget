@@ -4,36 +4,61 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/windingtheropes/budget/auth"
+	"github.com/windingtheropes/budget/auth"
 	"github.com/windingtheropes/budget/json"
 )
 
 // Authentication routes
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
-	engine.GET("/argent/entries", func(ctx *gin.Context) {
-		// uid := auth.GetAuthorization(ctx)
+	engine.GET("/api/argent/entry", func(ctx *gin.Context) {
+		usr := auth.GetUserFromRequest(ctx);
+		entries, err := GetEntries(usr.Id)
+		if err != nil {
+			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
+			return
+		}
+		ctx.AbortWithStatusJSON(200, json.EntryResponse{Value: entries})
 	})
+	engine.POST("/api/argent/entry/new", func(ctx *gin.Context) {
+		usr := auth.GetUserFromRequest(ctx);
+		var body json.NewEntryForm;
+		if err := ctx.ShouldBindJSON(&body); err != nil {
+			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
+			return
+		}
+		if body.Amount == 0 {
+			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
+		}
+		id, err := NewEntry(usr.Id, body.Amount, body.Currency);
+		if err != nil {
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
+
+		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", id))
+	})
+
 
 	// THESE NEED TO BE CACHED
 	engine.GET("/api/argent/currency/exchange", func(ctx *gin.Context) {
 		query := ctx.Query("currency")
 		if query == "" {
-			json.NewResponse(ctx, 400, "Malformatted request.");
+			json.AbortWithStatusMessage(ctx, 400, "Malformatted request.")
 			return
 		}
 
-		rate, err := GetExchangeCAD(query);
+		rate, err := GetExchangeCAD(query)
 		if err != nil {
-			json.NewResponse(ctx, 500, "Internal Error.");
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
 		ctx.AbortWithStatusJSON(200, json.ValueResponse{Value: fmt.Sprintf("%v", rate)})
 	})
 	engine.GET("/api/argent/currency", func(ctx *gin.Context) {
-		currencies, err := GetCurrencies();
+		currencies, err := GetCurrencies()
 		if err != nil {
-			json.NewResponse(ctx, 500, "Internal Error.");
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
 		ctx.AbortWithStatusJSON(200, json.ListResponse{Value: currencies})

@@ -1,14 +1,5 @@
 GET /api/argent/entry
 POST /api/argent/entry/new
-PATCH /api/argent/entry/edit
-DELETE /api/argent/entry/delete
-
-GET /api/argent/tag
-POST /api/argent/tag/new
-PATCH /api/argent/tag/edit
-DELETE /api/argent/tag/delete
-
-
 
 GET /api/argent/currency
 GET /api/argent/currency/exchange?currency=
