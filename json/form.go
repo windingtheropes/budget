@@ -10,12 +10,12 @@ type LoginForm struct {
 	Password string `json:"password"`
 }
 type NewTagForm struct {
-	Name  string `json:"name" bindings:"required"`
+	Name string `json:"name" bindings:"required"`
 }
 type ValueForm struct {
 	Value string `json:"value" binding:"required"`
 }
-type NewEntryForm struct {
+type NewTransactionForm struct {
 	Amount   float64 `json:"amount" binding:"required"`
 	Currency string  `json:"currency" binding:"required"`
 }

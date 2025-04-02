@@ -13,17 +13,24 @@ import (
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
 	engine.GET("/api/argent/entry", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx);
-		entries, err := GetEntries(usr.Id)
+		usr := auth.GetUserFromRequest(ctx)
+		transactions, err := GetTransactions(usr.Id)
 		if err != nil {
+			fmt.Println(err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		ctx.AbortWithStatusJSON(200, json.EntryResponse{Value: entries})
+		hydratedTransactions, err := HydrateTransactionsWithTags(transactions)
+		if err != nil {
+			fmt.Println(err)
+			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
+			return
+		}
+		ctx.AbortWithStatusJSON(200, json.HydratedTransactionsResponse{Value: hydratedTransactions})
 	})
 	engine.POST("/api/argent/entry/new", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx);
-		var body json.NewEntryForm;
+		usr := auth.GetUserFromRequest(ctx)
+		var body json.NewTransactionForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
@@ -31,7 +38,7 @@ func LoadRoutes(engine *gin.Engine) {
 		if body.Amount == 0 {
 			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
 		}
-		id, err := NewEntry(usr.Id, body.Amount, body.Currency);
+		id, err := NewTransaction(usr.Id, body.Amount, body.Currency)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
@@ -41,7 +48,7 @@ func LoadRoutes(engine *gin.Engine) {
 	})
 
 	engine.GET("/api/argent/tag", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx);
+		usr := auth.GetUserFromRequest(ctx)
 		tags, err := GetTag(types.UserID(usr.Id))
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
@@ -50,9 +57,9 @@ func LoadRoutes(engine *gin.Engine) {
 		ctx.AbortWithStatusJSON(200, json.TagResponse{Value: tags})
 	})
 	engine.POST("/api/argent/tag/new", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx);
+		usr := auth.GetUserFromRequest(ctx)
 
-		var body json.NewTagForm;
+		var body json.NewTagForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return

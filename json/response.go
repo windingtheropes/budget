@@ -19,8 +19,8 @@ type ListResponse struct {
 type ValueResponse struct {
 	Value string `json:"value"`
 }
-type EntryResponse struct {
-	Value []types.BudgetEntry
+type HydratedTransactionsResponse struct {
+	Value []types.HydTransactionEntry
 }
 type TagResponse struct {
 	Value []types.Tag
