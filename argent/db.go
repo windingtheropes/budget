@@ -38,7 +38,7 @@ func NewTag(user_id int, name string) (int64, error) {
 }
 
 // Create a new tag assignment; add a tag to an entry.
-func NewTagAssignment(tag_id int, entry_id string) (int64, error) {
+func NewTagAssignment(tag_id int, entry_id int64) (int64, error) {
 	result, err := based.DB().Exec("INSERT INTO tag_assignment (tag_id, entry_id) VALUES (?,?)", tag_id, entry_id)
 	if err != nil {
 		return 0, fmt.Errorf("newTagAssignment: %v", err)

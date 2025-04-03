@@ -25,3 +25,15 @@ func HydrateTransactionsWithTags(transactions []types.TransactionEntry) ([]types
 	}
 	return hydratedTransactions, nil
 }
+
+func AddTagsById(transaction_id int64, tag_ids []int) error {
+	// var assignment_ids []int64;
+	for i := 0; i < len(tag_ids); i++ {
+		_, err := NewTagAssignment(tag_ids[i], transaction_id)
+		if err != nil {
+			return err
+		}
+		// assignment_ids = append(assignment_ids, id);
+	}
+	return nil
+}

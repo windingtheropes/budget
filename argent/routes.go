@@ -43,7 +43,11 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
-
+		
+		if err := AddTagsById(id, body.Tags); err != nil {
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", id))
 	})
 

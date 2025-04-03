@@ -17,12 +17,13 @@ CREATE TABLE session (
 CREATE TABLE foreign_currency (
     id          VARCHAR(3) NOT NULL PRIMARY KEY
 );
-CREATE TABLE budget_entry (
+CREATE TABLE transaction_entry (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id     INT,
     amount      FLOAT,
     currency    VARCHAR(3),
-    FOREIGN KEY (user_id) REFERENCES usr(id),
+    unix_timestamp  BIGINT,
+    FOREIGN KEY (user_id) REFERENCES usr(id)
     -- FOREIGN KEY (currency) REFERENCES foreign_currency(id)
 );
 CREATE TABLE tag (
@@ -35,7 +36,7 @@ CREATE TABLE tag_assignment (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     tag_id      INT,
     entry_id    INT,
-    FOREIGN KEY (tag_id) REFERENCES tag(id)
-    FOREIGN KEY (entry_id) REFERENCES budget_entry(id)
+    FOREIGN KEY (tag_id) REFERENCES tag(id),
+    FOREIGN KEY (entry_id) REFERENCES transaction_entry(id)
 );
 
