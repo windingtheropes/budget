@@ -16,6 +16,7 @@ type ValueForm struct {
 	Value string `json:"value" binding:"required"`
 }
 type NewTransactionForm struct {
+	Msg string `json:"msg" binding:"required"`
 	Amount   float64 `json:"amount" binding:"required"`
 	Currency string  `json:"currency" binding:"required"`
 	Tags []int `json:"tags" binding:"required"`

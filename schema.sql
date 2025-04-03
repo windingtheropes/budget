@@ -20,6 +20,7 @@ CREATE TABLE foreign_currency (
 CREATE TABLE transaction_entry (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id     INT,
+    msg         VARCHAR(128),
     amount      FLOAT,
     currency    VARCHAR(3),
     unix_timestamp  BIGINT,

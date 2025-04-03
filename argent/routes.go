@@ -38,7 +38,7 @@ func LoadRoutes(engine *gin.Engine) {
 		if body.Amount == 0 {
 			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
 		}
-		id, err := NewTransaction(usr.Id, body.Amount, body.Currency)
+		id, err := NewTransaction(usr.Id, body.Amount, body.Currency, body.Msg)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return

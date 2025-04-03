@@ -10,8 +10,8 @@ import (
 )
 
 // Create a new budget entry.
-func NewTransaction(user_id int, amount float64, currency string) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, amount, currency) VALUES (?,?,?)", user_id, amount, currency)
+func NewTransaction(user_id int, amount float64, currency string, msg string) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, msg, amount, currency) VALUES (?,?,?,?)", msg, user_id, amount, currency)
 	if err != nil {
 		return 0, fmt.Errorf("newTransaction: %v", err)
 	}
@@ -67,7 +67,7 @@ func GetTransactions(user_id int) ([]types.TransactionEntry, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var transaction types.TransactionEntry
-		if err := rows.Scan(&transaction.Id, &transaction.User_Id, &transaction.Amount, &transaction.Currency, &transaction.Unix_Timestamp); err != nil {
+		if err := rows.Scan(&transaction.Id, &transaction.User_Id, &transaction.Msg, &transaction.Amount, &transaction.Currency, &transaction.Unix_Timestamp); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getTransaction %q: %v", user_id, err)
 		}

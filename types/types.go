@@ -27,6 +27,7 @@ type Currency struct {
 type TransactionEntry struct {
 	Id             int
 	User_Id        int
+	Msg 		   string
 	Amount         float64
 	Currency       string
 	Unix_Timestamp int64
@@ -34,6 +35,7 @@ type TransactionEntry struct {
 type HydTransactionEntry struct {
 	Id int
 	User_Id int
+	Msg string
 	Amount float64
 	Currency string
 	Tags []Tag
