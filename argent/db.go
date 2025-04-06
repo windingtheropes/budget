@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/windingtheropes/budget/based"
 	"github.com/windingtheropes/budget/types"
@@ -11,7 +12,7 @@ import (
 
 // Create a new budget entry.
 func NewTransaction(user_id int, amount float64, currency string, msg string) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, msg, amount, currency) VALUES (?,?,?,?)", msg, user_id, amount, currency)
+	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, msg, amount, currency, unix_timestamp) VALUES (?,?,?,?,?)", msg, user_id, amount, currency, time.Now().Unix())
 	if err != nil {
 		return 0, fmt.Errorf("newTransaction: %v", err)
 	}

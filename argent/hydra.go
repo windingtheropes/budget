@@ -9,18 +9,19 @@ import (
 func HydrateTransactionsWithTags(transactions []types.TransactionEntry) ([]types.HydTransactionEntry, error) {
 	var hydratedTransactions []types.HydTransactionEntry
 	for i := 0; i < len(transactions); i++ {
-		dbTrans := transactions[i]
-		tags, err := GetTransactionTags(dbTrans.Id)
+		d_trans := transactions[i]
+		tags, err := GetTransactionTags(d_trans.Id)
 		if err != nil {
 			return make([]types.HydTransactionEntry, 0), err
 		}
 		hydratedTransactions = append(hydratedTransactions, types.HydTransactionEntry{
-			Id:             dbTrans.Id,
-			User_Id:        dbTrans.User_Id,
-			Amount:         dbTrans.Amount,
-			Currency:       dbTrans.Currency,
+			Id:             d_trans.Id,
+			User_Id:        d_trans.User_Id,
+			Msg: 			d_trans.Msg,
+			Amount:         d_trans.Amount,
+			Currency:       d_trans.Currency,
 			Tags:           tags,
-			Unix_Timestamp: dbTrans.Unix_Timestamp,
+			Unix_Timestamp: d_trans.Unix_Timestamp,
 		})
 	}
 	return hydratedTransactions, nil
