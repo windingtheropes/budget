@@ -1,2 +1,4 @@
 POST /api/account/new
 PUT /api/account/login
+PUT /api/account/session
+PUT /api/account/user

@@ -25,6 +25,11 @@ type HydratedTransactionsResponse struct {
 type TagResponse struct {
 	Value []types.Tag
 }
+type UserInfoResponse struct {
+	Id int `json:"id"`
+	Name string `json:"name"`
+	Email string `json:"email"`
+}
 
 func AbortWithStatusMessage(ctx *gin.Context, code int, message string) {
 	ctx.AbortWithStatusJSON(code, GenericResponse{

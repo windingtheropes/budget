@@ -9,6 +9,9 @@ type LoginForm struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+type SessionForm struct {
+	Token	string `json:"token"`
+}
 type NewTagForm struct {
 	Name string `json:"name" bindings:"required"`
 }
