@@ -3,7 +3,6 @@ package auth
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/json"
@@ -119,37 +118,28 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 		sessions, err := GetSession(body.Token)
-		query_user := ctx.Query("id")
-		
-		query_id, err := strconv.ParseInt(query_user, 0, 64)
-		fmt.Printf("%v\n", sessions)
+
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
 		if len(sessions) > 0 {
-			if query_id == int64(sessions[0].User_Id) {
-				// Authorized
-				usrs, err := GetUser(types.UserID(query_id))
-				if err != nil {
-					json.AbortWithStatusMessage(ctx, 500, "Internal error.")
-					return
-				}
-				if len(usrs) == 0 {
-					json.AbortWithStatusMessage(ctx, 400, "User doesn't exist.")
-					return
-				}
-				usr := usrs[0]
-				
-				ctx.AbortWithStatusJSON(200, json.UserInfoResponse{
-					Id: usr.Id,
-					Name: usr.Name,
-					Email: usr.Email,
-				})
-			} else {
-				json.AbortWithStatusMessage(ctx, 403, "Unauthorized.")
+			usrs, err := GetUser(types.UserID(sessions[0].Id))
+			if err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 				return
 			}
+			if len(usrs) == 0 {
+				json.AbortWithStatusMessage(ctx, 400, "User doesn't exist.")
+				return
+			}
+			usr := usrs[0]
+
+			ctx.AbortWithStatusJSON(200, json.UserInfoResponse{
+				Id:    usr.Id,
+				Name:  usr.Name,
+				Email: usr.Email,
+			})
 		} else {
 			json.AbortWithStatusMessage(ctx, 403, "Unauthorized.")
 			return
