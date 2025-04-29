@@ -17,15 +17,21 @@ CREATE TABLE session (
 CREATE TABLE foreign_currency (
     id          VARCHAR(3) NOT NULL PRIMARY KEY
 );
+CREATE TABLE transaction_type (
+    id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    type_name   VARCHAR(128)
+);
 CREATE TABLE transaction_entry (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id     INT,
+    type_id     INT,
     msg         VARCHAR(128),
     amount      FLOAT,
     currency    VARCHAR(3),
     unix_timestamp  BIGINT,
-    FOREIGN KEY (user_id) REFERENCES usr(id)
-    -- FOREIGN KEY (currency) REFERENCES foreign_currency(id)
+    vendor      VARCHAR(128),
+    FOREIGN KEY (user_id) REFERENCES usr(id),
+    FOREIGN KEY (type_id) REFERENCES transaction_type(id)
 );
 CREATE TABLE tag (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
