@@ -24,22 +24,30 @@ type Session struct {
 type Currency struct {
 	Id string
 }
+type TransactionType struct {
+	Id int
+	Name string
+}
 type TransactionEntry struct {
 	Id             int
 	User_Id        int
+	Type_Id	 	   int
 	Msg 		   string
 	Amount         float64
 	Currency       string
 	Unix_Timestamp int64
+	Vendor string
 }
 type HydTransactionEntry struct {
 	Id int
 	User_Id int
+	Type_Id int
 	Msg string
 	Amount float64
 	Currency string
 	Tags []Tag
 	Unix_Timestamp int64
+	Vendor string
 }
 type TagAssignment struct {
 	Id       int

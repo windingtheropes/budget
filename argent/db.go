@@ -4,15 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/windingtheropes/budget/based"
 	"github.com/windingtheropes/budget/types"
 )
 
 // Create a new budget entry.
-func NewTransaction(user_id int, amount float64, currency string, msg string) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, msg, amount, currency, unix_timestamp) VALUES (?,?,?,?,?)", msg, user_id, amount, currency, time.Now().Unix())
+func NewTransaction(user_id int, type_id int, amount float64, currency string, msg string, unix_timestamp int, vendor string) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, type_id, msg, amount, currency, unix_timestamp, vendor) VALUES (?,?,?,?,?,?,?)", msg, user_id, type_id, amount, currency, unix_timestamp, vendor)
 	if err != nil {
 		return 0, fmt.Errorf("newTransaction: %v", err)
 	}
@@ -51,6 +50,33 @@ func NewTagAssignment(tag_id int, entry_id int64) (int64, error) {
 
 	return id, nil
 }
+// Get a list of transaction types
+func GetTransactionTypes() ([]types.TransactionType, error) {
+	// store matching sessions in the slcie
+	var transaction_types []types.TransactionType
+
+	rows, err := based.DB().Query("SELECT * FROM transaction_type")
+	// Catch error with query
+	if err != nil {
+		return nil, fmt.Errorf("getTransactionTypes %v", err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var transaction_type types.TransactionType
+		if err := rows.Scan(&transaction_type.Id, &transaction_type.Name); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getTransactionTypes %v", err)
+		}
+		transaction_types = append(transaction_types, transaction_type)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getTransactionTypes %v", err)
+	}
+	return transaction_types, nil
+}
 
 // Get all budget entries by a user identified by user_id.
 func GetTransactions(user_id int) ([]types.TransactionEntry, error) {
@@ -68,7 +94,7 @@ func GetTransactions(user_id int) ([]types.TransactionEntry, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var transaction types.TransactionEntry
-		if err := rows.Scan(&transaction.Id, &transaction.User_Id, &transaction.Msg, &transaction.Amount, &transaction.Currency, &transaction.Unix_Timestamp); err != nil {
+		if err := rows.Scan(&transaction.Id, &transaction.User_Id, &transaction.Type_Id, &transaction.Msg, &transaction.Amount, &transaction.Currency, &transaction.Unix_Timestamp, &transaction.Vendor); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getTransaction %q: %v", user_id, err)
 		}

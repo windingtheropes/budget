@@ -38,7 +38,7 @@ func LoadRoutes(engine *gin.Engine) {
 		if body.Amount == 0 {
 			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
 		}
-		id, err := NewTransaction(usr.Id, body.Amount, body.Currency, body.Msg)
+		id, err := NewTransaction(usr.Id, body.Type, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
@@ -102,5 +102,13 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 		ctx.AbortWithStatusJSON(200, json.ListResponse{Value: currencies})
+	})
+	engine.GET("/api/argent/type", func(ctx *gin.Context) {
+		types, err := GetTransactionTypes()
+		if err != nil {
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
+		ctx.AbortWithStatusJSON(200, json.TransactionTypesResponse{Value: types})
 	})
 }

@@ -16,6 +16,9 @@ type SessionResponse struct {
 type ListResponse struct {
 	Value []string `json:"value"`
 }
+type TransactionTypesResponse struct {
+	Value []types.TransactionType `json:"value"`
+}
 type ValueResponse struct {
 	Value string `json:"value"`
 }
