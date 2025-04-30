@@ -10,7 +10,7 @@ type LoginForm struct {
 	Password string `json:"password"`
 }
 type SessionForm struct {
-	Token	string `json:"token"`
+	Token string `json:"token"`
 }
 type NewTagForm struct {
 	Name string `json:"name" bindings:"required"`
@@ -19,11 +19,11 @@ type ValueForm struct {
 	Value string `json:"value" binding:"required"`
 }
 type NewTransactionForm struct {
-	Type int `json:"type" binding:"required"`
-	Msg string `json:"msg" binding:"required"`
-	Amount   float64 `json:"amount" binding:"required"`
-	Currency string  `json:"currency" binding:"required"`
-	Tags []int `json:"tags" binding:"required"`
-	Unix_Timestamp int `json:"unix_timestamp" binding:"required"`
-	Vendor string `json:"vendor"`
+	Type_Id        int     `json:"type_id" binding:"required"`
+	Msg            string  `json:"msg"`
+	Amount         float64 `json:"amount" binding:"required"`
+	Currency       string  `json:"currency" binding:"required"`
+	Tags           []int   `json:"tags"`
+	Unix_Timestamp int     `json:"unix_timestamp" binding:"required"`
+	Vendor         string  `json:"vendor"`
 }

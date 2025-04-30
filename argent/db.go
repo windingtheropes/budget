@@ -11,7 +11,7 @@ import (
 
 // Create a new budget entry.
 func NewTransaction(user_id int, type_id int, amount float64, currency string, msg string, unix_timestamp int, vendor string) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, type_id, msg, amount, currency, unix_timestamp, vendor) VALUES (?,?,?,?,?,?,?)", msg, user_id, type_id, amount, currency, unix_timestamp, vendor)
+	result, err := based.DB().Exec("INSERT INTO transaction_entry (user_id, type_id, msg, amount, currency, unix_timestamp, vendor) VALUES (?,?,?,?,?,?,?)", user_id, type_id, msg, amount, currency, unix_timestamp, vendor)
 	if err != nil {
 		return 0, fmt.Errorf("newTransaction: %v", err)
 	}

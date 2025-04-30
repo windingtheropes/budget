@@ -13,7 +13,13 @@ import (
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
 	engine.GET("/api/argent/entry", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx)
+		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
+		usr := usrs[0]
+
 		transactions, err := GetTransactions(usr.Id)
 		if err != nil {
 			fmt.Println(err)
@@ -29,30 +35,47 @@ func LoadRoutes(engine *gin.Engine) {
 		ctx.AbortWithStatusJSON(200, json.HydratedTransactionsResponse{Value: hydratedTransactions})
 	})
 	engine.POST("/api/argent/entry/new", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx)
+		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
+		usr := usrs[0]
+
 		var body json.NewTransactionForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
+			fmt.Printf("%v\n", err);
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
 		}
 		if body.Amount == 0 {
 			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
 		}
-		id, err := NewTransaction(usr.Id, body.Type, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
+		id, err := NewTransaction(usr.Id, body.Type_Id, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
 		if err != nil {
+			fmt.Printf("%v\n", err);
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
+		}
+
+		if len(body.Tags) > 0 {
+			if err := AddTagsById(id, body.Tags); err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+				return
+			}
 		}
 		
-		if err := AddTagsById(id, body.Tags); err != nil {
-			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
-			return
-		}
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", id))
 	})
 
 	engine.GET("/api/argent/tag", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx)
+		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
+		usr := usrs[0]
+
 		tags, err := GetTag(types.UserID(usr.Id))
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
@@ -61,7 +84,12 @@ func LoadRoutes(engine *gin.Engine) {
 		ctx.AbortWithStatusJSON(200, json.TagResponse{Value: tags})
 	})
 	engine.POST("/api/argent/tag/new", func(ctx *gin.Context) {
-		usr := auth.GetUserFromRequest(ctx)
+		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
+		usr := usrs[0]
 
 		var body json.NewTagForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {

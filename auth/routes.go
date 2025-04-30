@@ -88,13 +88,16 @@ func LoadRoutes(engine *gin.Engine) {
 
 	// Get info on a session from the enclosed token
 	engine.PUT("/api/account/session", func(ctx *gin.Context) {
-		GetUserFromRequest(ctx)
+		code, _ := GetUserFromRequestNew(GetTokenFromRequest(ctx))
+		if code >= 400 { json.AbortWithStatusMessage(ctx, code, ""); return }
 		json.AbortWithStatusMessage(ctx, 200, "Authorized.")
 	})
 
 	// Get user info
 	engine.PUT("/api/account/user", func(ctx *gin.Context) {
-		usr := GetUserFromRequest(ctx)
+		code, usrs := GetUserFromRequestNew(GetTokenFromRequest(ctx))
+		if code >= 400 { json.AbortWithStatusMessage(ctx, code, ""); return }
+		usr := usrs[0];
 
 		ctx.AbortWithStatusJSON(200, json.UserInfoResponse{
 			Id:    usr.Id,
