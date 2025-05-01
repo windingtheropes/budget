@@ -46,4 +46,3 @@ CREATE TABLE tag_assignment (
     FOREIGN KEY (tag_id) REFERENCES tag(id),
     FOREIGN KEY (entry_id) REFERENCES transaction_entry(id)
 );
-

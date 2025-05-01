@@ -23,10 +23,10 @@ type ValueResponse struct {
 	Value string `json:"value"`
 }
 type HydratedTransactionsResponse struct {
-	Value []types.HydTransactionEntry
+	Value []types.HydTransactionEntry `json:"value"`
 }
 type TagResponse struct {
-	Value []types.Tag
+	Value []types.Tag `json:"value"`
 }
 type UserInfoResponse struct {
 	Id int `json:"id"`
