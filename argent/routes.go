@@ -2,6 +2,7 @@ package argent
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/auth"
@@ -11,7 +12,7 @@ import (
 
 // Authentication routes
 func LoadRoutes(engine *gin.Engine) {
-	// New Account
+	// Get an entry and automatically hydrate it with tags
 	engine.GET("/api/argent/entry", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
@@ -20,7 +21,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		transactions, err := GetTransactions(usr.Id)
+		transactions, err := GetUserTransactions(usr.Id)
 		if err != nil {
 			fmt.Println(err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
@@ -44,7 +45,7 @@ func LoadRoutes(engine *gin.Engine) {
 
 		var body json.NewTransactionForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
-			fmt.Printf("%v\n", err);
+			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
 		}
@@ -53,7 +54,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		id, err := NewTransaction(usr.Id, body.Type_Id, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
 		if err != nil {
-			fmt.Printf("%v\n", err);
+			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
@@ -64,10 +65,55 @@ func LoadRoutes(engine *gin.Engine) {
 				return
 			}
 		}
-		
+
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", id))
 	})
+	engine.DELETE("/api/argent/entry/delete", func(ctx *gin.Context) {
+		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
+		usr := usrs[0]
 
+		// TODO relatively unsafe
+		var entry_query = ctx.Request.URL.Query().Get("id")
+		_eid, err := strconv.ParseInt(entry_query, 0, 64)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			json.AbortWithStatusMessage(ctx, 400, "Transaction ID must be an integer.")
+			return
+		}
+		var entry_id = int(_eid);
+		
+		entries, err := GetTransactionById(entry_id)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
+		if len(entries) == 0 {
+			fmt.Printf("%v\n", err)
+			json.AbortWithStatusMessage(ctx, 400, "Transaction doesn't exist.")
+			return
+		}
+		entry := entries[0]
+
+		if entry.User_Id != usr.Id {
+			fmt.Printf("%v\n", err)
+			json.AbortWithStatusMessage(ctx, 403, "Access Denied to transaction.")
+			return
+		}
+
+		if _, err := DeleteTransaction(entry_id); err != nil {
+			fmt.Printf("%v\n", err)
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
+
+		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry %v was deleted.", entry_id))
+	})
+	// List user tags
 	engine.GET("/api/argent/tag", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {

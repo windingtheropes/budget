@@ -23,6 +23,20 @@ func NewTransaction(user_id int, type_id int, amount float64, currency string, m
 	return id, nil
 }
 
+// Delete a budget entry
+func DeleteTransaction(entry_id int) (bool, error) {
+	result, err := based.DB().Exec("DELETE FROM transaction_entry WHERE id=?", entry_id)
+	if err != nil {
+		return false, fmt.Errorf("deleteTransaction: %v", err)
+	}
+
+	if _, err := result.LastInsertId(); err != nil {
+		return false, fmt.Errorf("deleteTransaction: %v", err)
+	}
+
+	return true, nil
+}
+
 // Create a new tag.
 func NewTag(user_id int, name string) (int64, error) {
 	result, err := based.DB().Exec("INSERT INTO tag (tag_name, user_id) VALUES (?,?)", name, user_id)
@@ -50,6 +64,7 @@ func NewTagAssignment(tag_id int, entry_id int64) (int64, error) {
 
 	return id, nil
 }
+
 // Get a list of transaction types
 func GetTransactionTypes() ([]types.TransactionType, error) {
 	// store matching sessions in the slcie
@@ -79,7 +94,7 @@ func GetTransactionTypes() ([]types.TransactionType, error) {
 }
 
 // Get all budget entries by a user identified by user_id.
-func GetTransactions(user_id int) ([]types.TransactionEntry, error) {
+func GetUserTransactions(user_id int) ([]types.TransactionEntry, error) {
 	// store matching sessions in the slcie
 	var transactions []types.TransactionEntry
 
@@ -87,7 +102,7 @@ func GetTransactions(user_id int) ([]types.TransactionEntry, error) {
 	// Catch error with query
 	if err != nil {
 		// token is sensitive
-		return nil, fmt.Errorf("getTransaction %q: %v", user_id, err)
+		return nil, fmt.Errorf("getTransaction %q: user id %v", user_id, err)
 	}
 	defer rows.Close()
 
@@ -96,13 +111,42 @@ func GetTransactions(user_id int) ([]types.TransactionEntry, error) {
 		var transaction types.TransactionEntry
 		if err := rows.Scan(&transaction.Id, &transaction.User_Id, &transaction.Type_Id, &transaction.Msg, &transaction.Amount, &transaction.Currency, &transaction.Unix_Timestamp, &transaction.Vendor); err != nil {
 			// Catch error casting to struct
-			return nil, fmt.Errorf("getTransaction %q: %v", user_id, err)
+			return nil, fmt.Errorf("getTransaction %q: user id %v", user_id, err)
 		}
 		transactions = append(transactions, transaction)
 	}
 	// Catch a row error
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("getTransaction %q: %v", user_id, err)
+		return nil, fmt.Errorf("getTransaction %q: user id %v", user_id, err)
+	}
+	return transactions, nil
+}
+
+// Get budget entry identified by its entry id
+func GetTransactionById(entry_id int) ([]types.TransactionEntry, error) {
+	// store matching sessions in the slcie
+	var transactions []types.TransactionEntry
+
+	rows, err := based.DB().Query("SELECT * FROM transaction_entry WHERE id = ?", entry_id)
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("getTransaction %q: entry id %v", entry_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var transaction types.TransactionEntry
+		if err := rows.Scan(&transaction.Id, &transaction.User_Id, &transaction.Type_Id, &transaction.Msg, &transaction.Amount, &transaction.Currency, &transaction.Unix_Timestamp, &transaction.Vendor); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getTransaction %q: entry id %v", entry_id, err)
+		}
+		transactions = append(transactions, transaction)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getTransaction %q: entry id %v", entry_id, err)
 	}
 	return transactions, nil
 }
