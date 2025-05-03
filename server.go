@@ -12,15 +12,15 @@ func main() {
 	dotenv.Init()
 	based.InitDB()
 
-	// db := based.DB();
 	engine := gin.Default()
 	engine.Use(CORSMiddleware())
 	auth.LoadRoutes(engine)
 	argent.LoadRoutes(engine)
+	engine.SetTrustedProxies(nil)
 
 	engine.Run("localhost:3000")
 }
-// TEMP BYPASS ALL
+
 func CORSMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
