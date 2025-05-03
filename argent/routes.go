@@ -105,6 +105,18 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 
+		tags, err := GetTransactionTags(entry.Id)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
+		// Remove all tag assignments, because they are dependent on the existance of this entry
+		for i := 0; i<len(tags); i++ {
+			tag := tags[i]
+			DeleteTagOnEntry(tag.Id, entry.Id)
+		}
+
 		if _, err := DeleteTransaction(entry_id); err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")

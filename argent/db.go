@@ -233,3 +233,17 @@ func GetTransactionTags(transaction_id int) ([]types.Tag, error) {
 	}
 	return tags, nil
 }
+
+// Delete a budget entry
+func DeleteTagOnEntry(tag_id int, entry_id int) (bool, error) {
+	result, err := based.DB().Exec("DELETE FROM tag_assignment WHERE (tag_id=? AND entry_id=?)", tag_id, entry_id)
+	if err != nil {
+		return false, fmt.Errorf("deleteTagonentry: %v", err)
+	}
+
+	if _, err := result.LastInsertId(); err != nil {
+		return false, fmt.Errorf("deleteTagonentry: %v", err)
+	}
+
+	return true, nil
+}
