@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/argent"
 	"github.com/windingtheropes/budget/auth"
@@ -18,7 +21,7 @@ func main() {
 	argent.LoadRoutes(engine)
 	engine.SetTrustedProxies(nil)
 
-	engine.Run("localhost:3000")
+	engine.Run(fmt.Sprintf("localhost:%v", os.Getenv("WEBPORT")))
 }
 
 func CORSMiddleware() gin.HandlerFunc {
