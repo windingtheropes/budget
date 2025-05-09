@@ -3,7 +3,6 @@ package argent
 import (
 	"database/sql"
 	"fmt"
-	"reflect"
 
 	"github.com/windingtheropes/budget/based"
 	"github.com/windingtheropes/budget/types"
@@ -151,53 +150,72 @@ func GetTransactionById(entry_id int) ([]types.TransactionEntry, error) {
 	return transactions, nil
 }
 
+func GetUserTagOwnerships(user_id int) ([]types.TagOwnership, error) {
+	rows, err := based.DB().Query("SELECT * FROM tag_ownership WHERE user_id = ?", user_id)
+	var ownership_records []types.TagOwnership
+	if err != nil {
+		return nil, fmt.Errorf("get tag, get ownership %q: %v", user_id, err)
+	}
+	defer rows.Close()
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var tag_ownership types.TagOwnership
+		if err := rows.Scan(&tag_ownership.Id, &tag_ownership.Tag_Id, &tag_ownership.User_Id); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getTag ownership %q: %v", user_id, err)
+		}
+		ownership_records = append(ownership_records, tag_ownership)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("get tag ownership %q: %v", user_id, err)
+	}
+	return ownership_records, nil
+}
+
 // Get a tag from the database. Identifier is of type TagIdentifier, which can be a TagID or UserID.
-func GetTag[T types.TagIdentifier](identifier T) ([]types.Tag, error) {
+func GetTagById(tag_id int) ([]types.Tag, error) {
 	// store matching sessions in the slice
 	var tags []types.Tag
 
 	var rows *sql.Rows
 	var err error
 
-	if reflect.TypeOf(identifier) == reflect.TypeOf(types.TagID(0)) {
-		rows, err = based.DB().Query("SELECT * FROM tag WHERE id = ?", identifier)
-	} else if reflect.TypeOf(identifier) == reflect.TypeOf(types.UserID(0)) {
-		rows, err = based.DB().Query("SELECT * FROM tag WHERE user_id = ?", identifier)
-	}
+	rows, err = based.DB().Query("SELECT * FROM tag WHERE id = ?", tag_id)
 
 	// Catch error with query
 	if err != nil {
 		// token is sensitive
-		return nil, fmt.Errorf("getTag %q: %v", identifier, err)
+		return nil, fmt.Errorf("getTag %q: %v", tag_id, err)
 	}
 	defer rows.Close()
 
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var tag types.Tag
-		if err := rows.Scan(&tag.Id, &tag.Name, &tag.User_Id); err != nil {
+		if err := rows.Scan(&tag.Id, &tag.Name); err != nil {
 			// Catch error casting to struct
-			return nil, fmt.Errorf("getTag %q: %v", identifier, err)
+			return nil, fmt.Errorf("getTag %q: %v", tag_id, err)
 		}
 		tags = append(tags, tag)
 	}
 	// Catch a row error
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("getTag %q: %v", identifier, err)
+		return nil, fmt.Errorf("getTag %q: %v", tag_id, err)
 	}
 	return tags, nil
 }
 
 // Get all tags on a budget entry by its entry_id.
-func GetTransactionTags(transaction_id int) ([]types.Tag, error) {
+func GetTagAssignments(entry_id int) ([]types.TagAssignment, error) {
 	// store matching sessions in the slice
 	var assignments []types.TagAssignment
 
-	rows, err := based.DB().Query("SELECT * FROM tag_assignment WHERE entry_id = ?", transaction_id)
+	rows, err := based.DB().Query("SELECT * FROM tag_assignment WHERE entry_id = ?", entry_id)
 	// Catch error with query
 	if err != nil {
 		// token is sensitive
-		return nil, fmt.Errorf("getTransactionTags %q: %v", transaction_id, err)
+		return nil, fmt.Errorf("getTransactionTags %q: %v", entry_id, err)
 	}
 	defer rows.Close()
 
@@ -206,32 +224,16 @@ func GetTransactionTags(transaction_id int) ([]types.Tag, error) {
 		var assignment types.TagAssignment
 		if err := rows.Scan(&assignment.Id, &assignment.Tag_Id, &assignment.Entry_Id); err != nil {
 			// Catch error casting to struct
-			return nil, fmt.Errorf("getTransactionTags %q: %v", transaction_id, err)
+			return nil, fmt.Errorf("getTransactionTags %q: %v", entry_id, err)
 		}
 		assignments = append(assignments, assignment)
 	}
 	// Catch a row error
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("getTransactionTags %q: %v", transaction_id, err)
+		return nil, fmt.Errorf("getTransactionTags %q: %v", entry_id, err)
 	}
 
-	if len(assignments) == 0 {
-		return make([]types.Tag, 0), nil
-	}
-
-	var tags []types.Tag
-
-	for i := 0; i < len(assignments); i++ {
-		tag, err := GetTag(types.TagID(assignments[i].Tag_Id))
-		if err != nil {
-			return nil, err
-		}
-		if len(tag) == 0 {
-			continue
-		}
-		tags = append(tags, tag[0])
-	}
-	return tags, nil
+	return assignments, nil
 }
 
 // Delete a budget entry

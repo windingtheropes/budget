@@ -7,7 +7,7 @@ import (
 )
 
 func TagExists(tag_name string, user_id int) bool {
-	tags, err := GetTag(types.UserID(user_id))
+	tags, err := GetUserTags(user_id)
 	if err != nil {
 		log.Fatal(err)
 		return false
@@ -24,8 +24,45 @@ func TagExists(tag_name string, user_id int) bool {
 	return false
 }
 
+func GetTransactionTags(entry_id int) ([]types.Tag, error) {
+	var tags []types.Tag
+	assignments, err := GetTagAssignments(entry_id)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(assignments); i++ {
+		res_tags, err := GetTagById(assignments[i].Tag_Id)
+		if err != nil {
+			return nil, err
+		}
+		if len(res_tags) == 1 {
+			tags = append(tags, res_tags[0])
+		}
+	}
+	return tags, nil
+}
+
+func GetUserTags(user_id int) ([]types.Tag, error) {
+	var userTags []types.Tag
+	ownership_records, err := GetUserTagOwnerships(user_id)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(ownership_records); i++ {
+		record := ownership_records[i]
+		res_tags, err := GetTagById(record.Tag_Id)
+		if err != nil {
+			return nil, err
+		}
+		if len(res_tags) == 1 {
+			userTags = append(userTags, res_tags[0])
+		}
+	}
+	return userTags, nil
+}
+
 func TagExistsOnEntry(tag_id int, entry_id int) bool {
-	tags, err := GetTransactionTags(entry_id)
+	tags, err := GetTagAssignments(entry_id)
 	if err != nil {
 		log.Fatal(err)
 		return false

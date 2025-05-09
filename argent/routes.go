@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/auth"
 	"github.com/windingtheropes/budget/json"
-	"github.com/windingtheropes/budget/types"
 )
 
 // Authentication routes
@@ -84,8 +83,8 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 400, "Transaction ID must be an integer.")
 			return
 		}
-		var entry_id = int(_eid);
-		
+		var entry_id = int(_eid)
+
 		entries, err := GetTransactionById(entry_id)
 		if err != nil {
 			fmt.Printf("%v\n", err)
@@ -105,16 +104,20 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 
-		tags, err := GetTransactionTags(entry.Id)
+		tags, err := GetTagAssignments(entry.Id)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
 		// Remove all tag assignments, because they are dependent on the existance of this entry
-		for i := 0; i<len(tags); i++ {
+		for i := 0; i < len(tags); i++ {
 			tag := tags[i]
-			DeleteTagOnEntry(tag.Id, entry.Id)
+			if _, err := DeleteTagOnEntry(tag.Id, entry.Id); err != nil {
+				fmt.Printf("%v\n", err)
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+				return
+			}
 		}
 
 		if _, err := DeleteTransaction(entry_id); err != nil {
@@ -134,7 +137,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		tags, err := GetTag(types.UserID(usr.Id))
+		tags, err := GetUserTags(usr.Id)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return

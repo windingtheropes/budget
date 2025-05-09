@@ -60,5 +60,9 @@ type TagName string
 type Tag struct {
 	Id      int
 	Name    string
-	User_Id int
+}
+type TagOwnership struct {
+	Id 		int
+	Tag_Id	int
+	User_Id	int
 }
