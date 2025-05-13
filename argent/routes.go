@@ -161,7 +161,7 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 400, "Tag exists.")
 			return
 		}
-		id, err := NewTag(usr.Id, body.Name)
+		id, err := NewUserTag(body.Name, usr.Id)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return

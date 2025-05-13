@@ -6,7 +6,7 @@ import (
 
 func HydrateTransactionsWithTags(transactions []types.TransactionEntry) ([]types.HydTransactionEntry, error) {
 	var hydratedTransactions []types.HydTransactionEntry
-	for i := 0; i < len(transactions); i++ {
+	for i := range transactions {
 		d_trans := transactions[i]
 		tags, err := GetTransactionTags(d_trans.Id)
 		if err != nil {
@@ -29,12 +29,11 @@ func HydrateTransactionsWithTags(transactions []types.TransactionEntry) ([]types
 
 func AddTagsById(transaction_id int64, tag_ids []int) error {
 	// var assignment_ids []int64;
-	for i := 0; i < len(tag_ids); i++ {
+	for i := range tag_ids {
 		_, err := NewTagAssignment(tag_ids[i], transaction_id)
 		if err != nil {
 			return err
 		}
-		// assignment_ids = append(assignment_ids, id);
 	}
 	return nil
 }

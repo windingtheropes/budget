@@ -37,14 +37,152 @@ func DeleteTransaction(entry_id int) (bool, error) {
 }
 
 // Create a new tag.
-func NewTag(user_id int, name string) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO tag (tag_name, user_id) VALUES (?,?)", name, user_id)
+func NewTag(name string) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO tag (tag_name) VALUES (?)", name)
 	if err != nil {
 		return 0, fmt.Errorf("newTag: %v", err)
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, fmt.Errorf("newTag: %v", err)
+	}
+
+	return id, nil
+}
+
+// Create a new budget
+func NewBudget(name string, user_id int, type_id int, max float64) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO budget (user_id, name, type_id, max) VALUES (?, ?, ?, ?)", user_id, name, type_id, max)
+	if err != nil {
+		return 0, fmt.Errorf("newBudget: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("newBudget: %v", err)
+	}
+
+	return id, nil
+}
+// Get all budgets created by a user
+func GetUserBudgets(user_id int) ([]types.Budget, error) {
+	// store matching sessions in the slcie
+	var budgets []types.Budget
+
+	rows, err := based.DB().Query("SELECT * FROM budget WHERE user_id = ?", user_id)
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("getBudgets %q: user id %v", user_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var budget types.Budget
+		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Name, &budget.Type_Id, &budget.Max); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getBudgets %q: user id %v", user_id, err)
+		}
+		budgets = append(budgets, budget)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getBudgets %q: user id %v", user_id, err)
+	}
+	return budgets, nil
+}
+// Get all budget entries of budget budget_id
+func GetBudgetEntries(budget_id int) ([]types.BudgetEntry, error) {
+	// store matching sessions in the slcie
+	var entries []types.BudgetEntry
+
+	rows, err := based.DB().Query("SELECT * FROM budget_entry WHERE budget_id = ?", budget_id)
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("getBudgetEntries %q: budget id %v", budget_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var entry types.BudgetEntry
+		if err := rows.Scan(&entry.Id, &entry.Transaction_Id, &entry.Budget_Id, &entry.Amount); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getBudgetEntries %q: budget id %v", budget_id, err)
+		}
+		entries = append(entries, entry)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getBudgetEntries %q: budget id %v", budget_id, err)
+	}
+	return entries, nil
+}
+// Get budget on a tag 
+func GetTagBudget(tag_id int) ([]types.TagBudget, error) {
+	// store matching sessions in the slcie
+	var tagBudgets []types.TagBudget
+
+	rows, err := based.DB().Query("SELECT * FROM tag_budget WHERE tag_id = ?", tag_id)
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("getTagBudget %q: tag id %v", tag_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var tagBudget types.TagBudget
+		if err := rows.Scan(&tagBudget.Id, &tagBudget.Tag_Id, &tagBudget.Budget_Id, &tagBudget.Max); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getTagBudget %q: tag id %v", tag_id, err)
+		}
+		tagBudgets = append(tagBudgets, tagBudget)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getTagBudget %q: tag id %v", tag_id, err)
+	}
+	return tagBudgets, nil
+}
+// Create a new budget entry from a transaction
+func NewBudgetEntry(transaction_id int, budget_id int, amount float64) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO budget_entry (transaction_id, budget_id, amount) VALUES (?, ?, ?)", transaction_id, budget_id, amount)
+	if err != nil {
+		return 0, fmt.Errorf("newBudgetEntry: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("newBudgetEntry: %v", err)
+	}
+
+	return id, nil
+}
+// Create a budget on a tag
+func NewTagBudget(tag_id int, budget_id int, max float64) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO tag_budget (tag_id, budget_id, max) VALUES (?, ?, ?)", tag_id, budget_id, max)
+	if err != nil {
+		return 0, fmt.Errorf("newTagBudget: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("newTagBudget: %v", err)
+	}
+
+	return id, nil
+}
+
+// Create a new ownership record of a tag
+func NewTagOwnership(tag_id int, user_id int) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO tag_ownership (tag_id, user_id) VALUES (?,?)", tag_id, user_id)
+	if err != nil {
+		return 0, fmt.Errorf("newTagownership: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("newTagownership: %v", err)
 	}
 
 	return id, nil
@@ -206,7 +344,7 @@ func GetTagById(tag_id int) ([]types.Tag, error) {
 	return tags, nil
 }
 
-// Get all tags on a budget entry by its entry_id.
+// Get tag assignments to a specified entry_id
 func GetTagAssignments(entry_id int) ([]types.TagAssignment, error) {
 	// store matching sessions in the slice
 	var assignments []types.TagAssignment
@@ -222,7 +360,7 @@ func GetTagAssignments(entry_id int) ([]types.TagAssignment, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var assignment types.TagAssignment
-		if err := rows.Scan(&assignment.Id, &assignment.Tag_Id, &assignment.Entry_Id); err != nil {
+		if err := rows.Scan(&assignment.Id, &assignment.Tag_Id, &assignment.Transaction_Id); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getTransactionTags %q: %v", entry_id, err)
 		}

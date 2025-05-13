@@ -60,7 +60,16 @@ func GetUserTags(user_id int) ([]types.Tag, error) {
 	}
 	return userTags, nil
 }
-
+func NewUserTag(name string, user_id int) (int64, error) {
+	tag_id, err := NewTag(name)
+	if err != nil {
+		return 0, err
+	}
+	if _, err := NewTagOwnership(int(tag_id), user_id); err != nil {
+		return 0, err
+	}
+	return tag_id, nil
+}
 func TagExistsOnEntry(tag_id int, entry_id int) bool {
 	tags, err := GetTagAssignments(entry_id)
 	if err != nil {

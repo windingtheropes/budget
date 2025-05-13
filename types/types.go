@@ -25,44 +25,66 @@ type Currency struct {
 	Id string
 }
 type TransactionType struct {
-	Id int
+	Id   int
 	Name string
 }
 type TransactionEntry struct {
 	Id             int
 	User_Id        int
-	Type_Id	 	   int
-	Msg 		   string
+	Type_Id        int
+	Msg            string
 	Amount         float64
 	Currency       string
 	Unix_Timestamp int64
-	Vendor string
+	Vendor         string
 }
 type HydTransactionEntry struct {
-	Id int
-	User_Id int
-	Type_Id int
-	Msg string
-	Amount float64
-	Currency string
-	Tags []Tag
+	Id             int
+	User_Id        int
+	Type_Id        int
+	Msg            string
+	Amount         float64
+	Currency       string
+	Tags           []Tag
 	Unix_Timestamp int64
-	Vendor string
+	Vendor         string
 }
 type TagAssignment struct {
-	Id       int
-	Tag_Id   int
-	Entry_Id int
+	Id             int
+	Tag_Id         int
+	Transaction_Id int
 }
 
 type TagID int
 type TagName string
 type Tag struct {
-	Id      int
-	Name    string
+	Id   int
+	Name string
 }
 type TagOwnership struct {
-	Id 		int
-	Tag_Id	int
+	Id      int
+	Tag_Id  int
+	User_Id int
+}
+
+type Budget struct {
+	Id      int
 	User_Id	int
+	Name    string
+	Type_Id int
+	Max     float64
+}
+
+type BudgetEntry struct {
+	Id 				int
+	Transaction_Id	int
+	Budget_Id		int
+	Amount			float64
+}
+
+type TagBudget struct {
+	Id			int
+	Tag_Id		int
+	Budget_Id 	int
+	Max			float64
 }
