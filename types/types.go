@@ -4,31 +4,32 @@ type UserIdentifier interface {
 	Email | UserID
 }
 
-type UserID int
+
+type UserID int64
 type Email string
 type User struct {
-	Id       int
+	Id       int64
 	Name     string
 	Email    string
 	Password string
 }
 type Session struct {
-	Id      int
+	Id      int64
 	Token   string
-	User_Id int
+	User_Id int64
 	Expiry  int64
 }
 type Currency struct {
 	Id string
 }
 type TransactionType struct {
-	Id   int
+	Id   int64
 	Name string
 }
 type TransactionEntry struct {
-	Id             int
-	User_Id        int
-	Type_Id        int
+	Id             int64
+	User_Id        int64
+	Type_Id        int64
 	Msg            string
 	Amount         float64
 	Currency       string
@@ -36,9 +37,9 @@ type TransactionEntry struct {
 	Vendor         string
 }
 type HydTransactionEntry struct {
-	Id             int
-	User_Id        int
-	Type_Id        int
+	Id             int64
+	User_Id        int64
+	Type_Id        int64
 	Msg            string
 	Amount         float64
 	Currency       string
@@ -48,48 +49,48 @@ type HydTransactionEntry struct {
 	Budget_Entries []BudgetEntry
 }
 type TagAssignment struct {
-	Id             int
-	Tag_Id         int
-	Transaction_Id int
+	Id             int64
+	Tag_Id         int64
+	Transaction_Id int64
 }
 
-type TagID int
+type TagID int64
 type TagName string
 type Tag struct {
-	Id   int
+	Id   int64
 	Name string
 }
 type HydTag struct {
-	Id         int
-	User_Id    int
+	Id         int64
+	User_Id    int64
 	Name       string
 	Tag_Budgets []TagBudget
 }
 type TagOwnership struct {
-	Id      int
-	Tag_Id  int
-	User_Id int
+	Id      int64
+	Tag_Id  int64
+	User_Id int64
 }
 
 type Budget struct {
-	Id      int
-	User_Id int
+	Id      int64
+	User_Id int64
 	Name    string
-	Type_Id int
+	Type_Id int64
 	Goal    float64
 }
 
 type BudgetEntry struct {
-	Id             int
-	Transaction_Id int
-	Budget_Id      int
+	Id             int64
+	Transaction_Id int64
+	Budget_Id      int64
 	Amount         float64
 }
 
 type TagBudget struct {
-	Id        int
-	Tag_Id    int
-	Budget_Id int
+	Id        int64
+	Tag_Id    int64
+	Budget_Id int64
 	Goal      float64
-	Type_Id   int
+	Type_Id   int64
 }

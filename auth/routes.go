@@ -13,7 +13,7 @@ import (
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
 	engine.POST("/api/account/new", func(ctx *gin.Context) {
-		body := json.NewAccountForm{}
+		body := json.AccountForm{}
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
@@ -60,8 +60,7 @@ func LoadRoutes(engine *gin.Engine) {
 		if len(users) == 1 {
 			usr := users[0]
 			if body.Password == usr.Password {
-				expiry := (60 * 60 * 4)
-				t, _, err := NewSession(usr.Id, expiry)
+				t, _, err := NewSession(usr.Id, (60 * 60 * 4))
 				if err != nil {
 					log.Fatal(err)
 					json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -89,15 +88,21 @@ func LoadRoutes(engine *gin.Engine) {
 	// Get info on a session from the enclosed token
 	engine.PUT("/api/account/session", func(ctx *gin.Context) {
 		code, _ := GetUserFromRequestNew(GetTokenFromRequest(ctx))
-		if code >= 400 { json.AbortWithStatusMessage(ctx, code, ""); return }
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
 		json.AbortWithStatusMessage(ctx, 200, "Authorized.")
 	})
 
 	// Get user info
 	engine.PUT("/api/account/user", func(ctx *gin.Context) {
 		code, usrs := GetUserFromRequestNew(GetTokenFromRequest(ctx))
-		if code >= 400 { json.AbortWithStatusMessage(ctx, code, ""); return }
-		usr := usrs[0];
+		if code >= 400 {
+			json.AbortWithStatusMessage(ctx, code, "")
+			return
+		}
+		usr := usrs[0]
 
 		ctx.AbortWithStatusJSON(200, json.UserInfoResponse{
 			Id:    usr.Id,

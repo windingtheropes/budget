@@ -1,7 +1,7 @@
 package argent
 import ()
 
-func UserOwnsTransaction(user_id int, transaction_id int) bool {
+func UserOwnsTransaction(user_id int64, transaction_id int64) bool {
 	transactions, err := GetTransactionById(transaction_id)
 	if err != nil {
 		return false
@@ -15,7 +15,7 @@ func UserOwnsTransaction(user_id int, transaction_id int) bool {
 	return false
 }
 
-func TransactionExists(transaction_id int) bool {
+func TransactionExists(transaction_id int64) bool {
 	transactions, err := GetTransactionById(transaction_id)
 	if err != nil {
 		return false

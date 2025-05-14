@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func UserBudgetNameExists(budget_name string, user_id int) bool {
+func UserBudgetNameExists(budget_name string, user_id int64) bool {
 	budgets, err := GetUserBudgets(user_id)
 	if err != nil {
 		log.Fatal(err)
@@ -21,7 +21,7 @@ func UserBudgetNameExists(budget_name string, user_id int) bool {
 	}
 	return false
 }
-func BudgetExists(budget_id int) bool {
+func BudgetExists(budget_id int64) bool {
 	budgets, err := GetBudgetById(budget_id)
 	if err != nil {
 		return false
@@ -33,7 +33,7 @@ func BudgetExists(budget_id int) bool {
 	}
 }
 
-func UserOwnsBudget(user_id int, budget_id int) bool {
+func UserOwnsBudget(user_id int64, budget_id int64) bool {
 	budgets, err := GetBudgetById(budget_id)
 	if err != nil {
 		return false

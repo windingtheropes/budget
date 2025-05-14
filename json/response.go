@@ -29,7 +29,7 @@ type ValueResponse[T any] struct {
 	Value T `json:"value"`
 }
 type UserInfoResponse struct {
-	Id int `json:"id"`
+	Id int64 `json:"id"`
 	Name string `json:"name"`
 	Email string `json:"email"`
 }

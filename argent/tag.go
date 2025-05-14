@@ -6,7 +6,7 @@ import (
 	"github.com/windingtheropes/budget/types"
 )
 
-func UserTagNameExists(tag_name string, user_id int) bool {
+func UserTagNameExists(tag_name string, user_id int64) bool {
 	tags, err := GetUserTags(user_id)
 	if err != nil {
 		log.Fatal(err)
@@ -24,7 +24,7 @@ func UserTagNameExists(tag_name string, user_id int) bool {
 	return false
 }
 
-func GetTransactionTags(entry_id int) ([]types.Tag, error) {
+func GetTransactionTags(entry_id int64) ([]types.Tag, error) {
 	var tags []types.Tag
 	assignments, err := GetTagAssignments(entry_id)
 	if err != nil {
@@ -42,7 +42,7 @@ func GetTransactionTags(entry_id int) ([]types.Tag, error) {
 	return tags, nil
 }
 
-func GetUserTags(user_id int) ([]types.Tag, error) {
+func GetUserTags(user_id int64) ([]types.Tag, error) {
 	var userTags []types.Tag
 	ownership_records, err := GetUserTagOwnerships(user_id)
 	if err != nil {
@@ -60,17 +60,17 @@ func GetUserTags(user_id int) ([]types.Tag, error) {
 	}
 	return userTags, nil
 }
-func NewUserTag(name string, user_id int) (int64, error) {
+func NewUserTag(name string, user_id int64) (int64, error) {
 	tag_id, err := NewTag(name)
 	if err != nil {
 		return 0, err
 	}
-	if _, err := NewTagOwnership(int(tag_id), user_id); err != nil {
+	if _, err := NewTagOwnership(int64(tag_id), user_id); err != nil {
 		return 0, err
 	}
 	return tag_id, nil
 }
-func TagExistsOnEntry(tag_id int, entry_id int) bool {
+func TagExistsOnEntry(tag_id int64, entry_id int64) bool {
 	tags, err := GetTagAssignments(entry_id)
 	if err != nil {
 		log.Fatal(err)
@@ -88,7 +88,7 @@ func TagExistsOnEntry(tag_id int, entry_id int) bool {
 	return false
 }
 
-func UserOwnsTag(user_id int, tag_id int) bool {
+func UserOwnsTag(user_id int64, tag_id int64) bool {
 	ownerships, err := GetUserTagOwnerships(user_id)
 	if err != nil {
 		return false
@@ -105,7 +105,7 @@ func UserOwnsTag(user_id int, tag_id int) bool {
 	return false
 }
 
-func TagExists(tag_id int) bool {
+func TagExists(tag_id int64) bool {
 	tags, err := GetTagById(tag_id)
 	if err != nil {
 		return false

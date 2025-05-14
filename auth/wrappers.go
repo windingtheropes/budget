@@ -19,7 +19,7 @@ func GetTokenFromRequest(ctx *gin.Context) string {
 	return authorization[1]
 } 
 
-// Authentication middleware, returns either ([2xx], [user]), ([4-5xx], nil)
+// Authentication middleware, returns either ([200], [user]), ([4-5xx], nil)
 func GetUserFromRequestNew(token string) (int, []types.User) {
 	s, err := GetSession(token)
 	if err != nil {

@@ -62,9 +62,9 @@ func AddUser(full_name string, email string, pass_hashed string) (int64, error) 
 }
 
 // New session given a user_id, and a lifetime in seconds
-func NewSession(user_id int, lifetime int) ([]string, int64, error) {
+func NewSession(user_id int64, lifetime int64) ([]string, int64, error) {
 	var token string = GenToken(64);
-    expiry := time.Now().Unix() + int64(lifetime)
+    expiry := time.Now().Unix() + lifetime
     result, err := based.DB().Exec("INSERT INTO session (token, user_id, expiry) VALUES (?,?,?)", token, user_id, expiry)
 	if err != nil {
         return nil, 0, fmt.Errorf("newSession: %v", err)

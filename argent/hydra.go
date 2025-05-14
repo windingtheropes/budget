@@ -50,7 +50,7 @@ func HydrateTagsWithTagBudgets(tags []types.Tag) ([]types.HydTag, error) {
 	return hydratedTags, nil
 }
 
-func AddTagsById(transaction_id int64, tag_ids []int) error {
+func AddTagsById(transaction_id int64, tag_ids []int64) error {
 	// var assignment_ids []int64;
 	for i := range tag_ids {
 		_, err := NewTagAssignment(tag_ids[i], transaction_id)
