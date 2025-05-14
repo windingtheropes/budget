@@ -60,9 +60,9 @@ CREATE TABLE budget (
     user_id     INT,
     type_id     INT,
     budget_name VARCHAR(128),
-    max         FLOAT,
+    goal         FLOAT,
     FOREIGN KEY (user_id) REFERENCES usr(id),
-    FOREIGN KEY (type_id) REFERENCES transaction_type(id),
+    FOREIGN KEY (type_id) REFERENCES transaction_type(id)
 );
 
 CREATE TABLE budget_entry (

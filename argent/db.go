@@ -51,8 +51,8 @@ func NewTag(name string) (int64, error) {
 }
 
 // Create a new budget
-func NewBudget(name string, user_id int, type_id int, max float64) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO budget (user_id, name, type_id, max) VALUES (?, ?, ?, ?)", user_id, name, type_id, max)
+func NewBudget(name string, user_id int, type_id int, goal float64) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO budget (user_id, type_id, name, goal) VALUES (?, ?, ?, ?)", user_id, type_id, name, goal)
 	if err != nil {
 		return 0, fmt.Errorf("newBudget: %v", err)
 	}
@@ -63,6 +63,7 @@ func NewBudget(name string, user_id int, type_id int, max float64) (int64, error
 
 	return id, nil
 }
+
 // Get all budgets created by a user
 func GetUserBudgets(user_id int) ([]types.Budget, error) {
 	// store matching sessions in the slcie
@@ -79,7 +80,7 @@ func GetUserBudgets(user_id int) ([]types.Budget, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var budget types.Budget
-		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Name, &budget.Type_Id, &budget.Max); err != nil {
+		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Type_Id, &budget.Name, &budget.Goal); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getBudgets %q: user id %v", user_id, err)
 		}
@@ -91,6 +92,7 @@ func GetUserBudgets(user_id int) ([]types.Budget, error) {
 	}
 	return budgets, nil
 }
+
 // Get all budget entries of budget budget_id
 func GetBudgetEntries(budget_id int) ([]types.BudgetEntry, error) {
 	// store matching sessions in the slcie
@@ -119,7 +121,8 @@ func GetBudgetEntries(budget_id int) ([]types.BudgetEntry, error) {
 	}
 	return entries, nil
 }
-// Get budget on a tag 
+
+// Get budget on a tag
 func GetTagBudget(tag_id int) ([]types.TagBudget, error) {
 	// store matching sessions in the slcie
 	var tagBudgets []types.TagBudget
@@ -135,7 +138,7 @@ func GetTagBudget(tag_id int) ([]types.TagBudget, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var tagBudget types.TagBudget
-		if err := rows.Scan(&tagBudget.Id, &tagBudget.Tag_Id, &tagBudget.Budget_Id, &tagBudget.Max); err != nil {
+		if err := rows.Scan(&tagBudget.Id, &tagBudget.Tag_Id, &tagBudget.Budget_Id, &tagBudget.Goal, &tagBudget.Type_Id); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getTagBudget %q: tag id %v", tag_id, err)
 		}
@@ -147,6 +150,7 @@ func GetTagBudget(tag_id int) ([]types.TagBudget, error) {
 	}
 	return tagBudgets, nil
 }
+
 // Create a new budget entry from a transaction
 func NewBudgetEntry(transaction_id int, budget_id int, amount float64) (int64, error) {
 	result, err := based.DB().Exec("INSERT INTO budget_entry (transaction_id, budget_id, amount) VALUES (?, ?, ?)", transaction_id, budget_id, amount)
@@ -160,9 +164,10 @@ func NewBudgetEntry(transaction_id int, budget_id int, amount float64) (int64, e
 
 	return id, nil
 }
+
 // Create a budget on a tag
-func NewTagBudget(tag_id int, budget_id int, max float64) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO tag_budget (tag_id, budget_id, max) VALUES (?, ?, ?)", tag_id, budget_id, max)
+func NewTagBudget(tag_id int, budget_id int, goal float64, type_id int) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO tag_budget (tag_id, budget_id, goal, type_id) VALUES (?, ?, ?, ?)", tag_id, budget_id, goal, type_id)
 	if err != nil {
 		return 0, fmt.Errorf("newTagBudget: %v", err)
 	}

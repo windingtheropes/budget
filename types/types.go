@@ -61,6 +61,12 @@ type Tag struct {
 	Id   int
 	Name string
 }
+type HydTag struct {
+	Id 			int
+	User_Id 	int
+	Name 		string
+	Budget_Id	[]int
+}
 type TagOwnership struct {
 	Id      int
 	Tag_Id  int
@@ -69,22 +75,23 @@ type TagOwnership struct {
 
 type Budget struct {
 	Id      int
-	User_Id	int
+	User_Id int
 	Name    string
 	Type_Id int
-	Max     float64
+	Goal    float64
 }
 
 type BudgetEntry struct {
-	Id 				int
-	Transaction_Id	int
-	Budget_Id		int
-	Amount			float64
+	Id             int
+	Transaction_Id int
+	Budget_Id      int
+	Amount         float64
 }
 
 type TagBudget struct {
-	Id			int
-	Tag_Id		int
-	Budget_Id 	int
-	Max			float64
+	Id        int
+	Tag_Id    int
+	Budget_Id int
+	Goal      float64
+	Type_Id   int
 }
