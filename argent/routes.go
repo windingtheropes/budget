@@ -43,7 +43,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		var body json.NewTransactionForm
+		var body json.TransactionForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
@@ -52,21 +52,43 @@ func LoadRoutes(engine *gin.Engine) {
 		if body.Amount == 0 {
 			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
 		}
-		id, err := NewTransaction(usr.Id, body.Type_Id, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
+		transaction_id, err := NewTransaction(usr.Id, body.Type_Id, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
 
-		if len(body.Tags) > 0 {
-			if err := AddTagsById(id, body.Tags); err != nil {
-				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+		// add tags
+		for i := range body.Tags {
+			tag_id := body.Tags[i]
+			_, err := NewTagAssignment(tag_id, transaction_id)
+			if err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
 				return
 			}
 		}
 
-		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", id))
+		// create budget entries
+		for i := range body.Budget_Entries {
+			budget_entry := body.Budget_Entries[i]			
+			if !BudgetExists(budget_entry.Budget_Id) {
+				json.AbortWithStatusMessage(ctx, 400, "Transaction does not exist.")
+				return
+			}
+			if !UserOwnsBudget(usr.Id, budget_entry.Budget_Id) {
+				json.AbortWithStatusMessage(ctx, 403, "Budget not owned by user requesting it.")
+				return
+			}
+
+			_, err := NewBudgetEntry(transaction_id, budget_entry.Budget_Id, budget_entry.Amount)
+			if err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
+				return
+			}
+		}
+
+		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", transaction_id))
 	})
 	engine.DELETE("/api/argent/entry/delete", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
@@ -78,13 +100,12 @@ func LoadRoutes(engine *gin.Engine) {
 
 		// TODO relatively unsafe
 		var transaction_query = ctx.Request.URL.Query().Get("id")
-		_tid, err := strconv.ParseInt(transaction_query, 0, 64)
+		transaction_id, err := strconv.ParseInt(transaction_query, 0, 64)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 400, "Transaction ID must be an integer.")
 			return
 		}
-		var transaction_id = int(_tid)
 
 		if !TransactionExists(transaction_id) {
 			json.AbortWithStatusMessage(ctx, 400, "Transaction does not exist.")
@@ -168,7 +189,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		var body json.NewTagForm
+		var body json.TagForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
@@ -177,12 +198,41 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 400, "Tag exists.")
 			return
 		}
-		id, err := NewUserTag(body.Name, usr.Id)
+
+		tag_id, err := NewUserTag(body.Name, usr.Id)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created tag %v (%v).", body.Name, id))
+		// try to load each tagbudget
+		for i := range body.Tag_Budgets {
+			tagBudget := body.Tag_Budgets[i]
+			if !TagExists(tag_id) {
+				json.AbortWithStatusMessage(ctx, 400, "Tag does not exist.")
+				return
+			}
+			if !UserOwnsTag(usr.Id, tag_id) {
+				json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
+				return
+			}
+			if !BudgetExists(tagBudget.Budget_Id) {
+				json.AbortWithStatusMessage(ctx, 400, "Budget does not exist.")
+				return
+			}
+			if !UserOwnsBudget(usr.Id, tagBudget.Budget_Id) {
+				json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
+				return
+			}
+
+			// create tagbudget
+			_, err := NewTagBudget(tag_id, tagBudget.Budget_Id, tagBudget.Goal, tagBudget.Type_Id)
+			if err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
+				return
+			}
+		}
+
+		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created tag %v (%v).", body.Name, tag_id))
 	})
 	engine.POST("/api/argent/budget/new", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
@@ -192,7 +242,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		var body json.NewBudgetForm
+		var body json.BudgetForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
@@ -207,86 +257,6 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created budget %v (%v).", body.Name, id))
-	})
-	engine.POST("/api/argent/budget/entry/new", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
-		if code >= 400 {
-			json.AbortWithStatusMessage(ctx, code, "")
-			return
-		}
-		usr := usrs[0]
-
-		var body json.NewBudgetEntryForm
-		if err := ctx.ShouldBindJSON(&body); err != nil {
-			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
-			return
-		}
-
-		// Confirm ownership of requested resources.
-		if !TransactionExists(body.Transaction_Id) {
-			json.AbortWithStatusMessage(ctx, 400, "Transaction does not exist.")
-			return
-		}
-		if !UserOwnsTransaction(usr.Id, body.Transaction_Id) {
-			json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
-			return
-		}
-		if !BudgetExists(body.Transaction_Id) {
-			json.AbortWithStatusMessage(ctx, 400, "Transaction does not exist.")
-			return
-		}
-		if !UserOwnsBudget(usr.Id, body.Budget_Id) {
-			json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
-			return
-		}
-
-		id, err := NewBudgetEntry(body.Transaction_Id, body.Budget_Id, body.Amount)
-		if err != nil {
-			json.AbortWithStatusMessage(ctx, 500, "Internal Error")
-			return
-		}
-
-		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created budget entry  with id %v", id))
-	})
-	// New TagBudget
-	engine.POST("/api/argent/tag/budget/new", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
-		if code >= 400 {
-			json.AbortWithStatusMessage(ctx, code, "")
-			return
-		}
-		usr := usrs[0]
-
-		var body json.NewTagBudgetForm
-		if err := ctx.ShouldBindJSON(&body); err != nil {
-			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
-			return
-		}
-
-		if !TagExists(body.Tag_Id) {
-			json.AbortWithStatusMessage(ctx, 400, "Tag does not exist.")
-			return
-		}
-		if !UserOwnsTag(usr.Id, body.Tag_Id) {
-			json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
-			return
-		}
-		if !BudgetExists(body.Budget_Id) {
-			json.AbortWithStatusMessage(ctx, 400, "Budget does not exist.")
-			return
-		}
-		if !UserOwnsBudget(usr.Id, body.Budget_Id) {
-			json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
-			return
-		}
-
-		id, err := NewTagBudget(body.Tag_Id, body.Budget_Id, body.Goal, body.Type_Id)
-		if err != nil {
-			json.AbortWithStatusMessage(ctx, 500, "Internal Error")
-			return
-		}
-
-		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created budget entry  with id %v", id))
 	})
 	// THESE NEED TO BE CACHED
 	engine.GET("/api/argent/currency/exchange", func(ctx *gin.Context) {
