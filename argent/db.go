@@ -315,7 +315,38 @@ func GetUserTagOwnerships(user_id int) ([]types.TagOwnership, error) {
 	}
 	return ownership_records, nil
 }
+// Get a budget from the database.
+func GetBudgetById(budget_id int) ([]types.Budget, error) {
+	// store matching sessions in the slice
+	var budgets []types.Budget
 
+	var rows *sql.Rows
+	var err error
+
+	rows, err = based.DB().Query("SELECT * FROM budget WHERE id = ?", budget_id)
+
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("getbudget %q: %v", budget_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var budget types.Budget
+		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Type_Id, &budget.Name, &budget.Goal); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getbudget %q: %v", budget_id, err)
+		}
+		budgets = append(budgets, budget)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getbudget %q: %v", budget_id, err)
+	}
+	return budgets, nil
+}
 // Get a tag from the database. Identifier is of type TagIdentifier, which can be a TagID or UserID.
 func GetTagById(tag_id int) ([]types.Tag, error) {
 	// store matching sessions in the slice
