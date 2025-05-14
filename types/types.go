@@ -3,9 +3,6 @@ package types
 type UserIdentifier interface {
 	Email | UserID
 }
-type TagIdentifier interface {
-	TagID | UserID | TagName
-}
 
 type UserID int
 type Email string
@@ -48,6 +45,7 @@ type HydTransactionEntry struct {
 	Tags           []Tag
 	Unix_Timestamp int64
 	Vendor         string
+	Budget_Entries []BudgetEntry
 }
 type TagAssignment struct {
 	Id             int
@@ -62,10 +60,10 @@ type Tag struct {
 	Name string
 }
 type HydTag struct {
-	Id 			int
-	User_Id 	int
-	Name 		string
-	Budget_Id	[]int
+	Id         int
+	User_Id    int
+	Name       string
+	Tag_Budgets []TagBudget
 }
 type TagOwnership struct {
 	Id      int
