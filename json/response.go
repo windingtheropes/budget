@@ -19,14 +19,14 @@ type ListResponse struct {
 type TransactionTypesResponse struct {
 	Value []types.TransactionType `json:"value"`
 }
-type ValueResponse struct {
-	Value string `json:"value"`
-}
 type HydratedTransactionsResponse struct {
 	Value []types.HydTransactionEntry `json:"value"`
 }
 type TagResponse struct {
 	Value []types.Tag `json:"value"`
+}
+type ValueResponse[T any] struct {
+	Value T `json:"value"`
 }
 type UserInfoResponse struct {
 	Id int `json:"id"`

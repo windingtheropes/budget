@@ -15,8 +15,25 @@ type SessionForm struct {
 type NewTagForm struct {
 	Name string `json:"name" bindings:"required"`
 }
-type ValueForm struct {
-	Value string `json:"value" binding:"required"`
+type NewBudgetForm struct {
+	Type_Id        int     `json:"type_id" binding:"required"`
+	Name            string  `json:"name" binding:"required"`
+	Goal         float64 `json:"goal" binding:"required"`
+}
+type NewTagBudgetForm struct {
+	Tag_Id    int  	`json:"tag_id" binding:"required"`
+	Budget_Id int `json:"budget_id" binding:"required"`
+	Goal      float64 `json:"goal" binding:"required"`
+	Type_Id   int `json:"type_id" binding:"required"`
+}
+
+type ValueForm[T any] struct {
+	Value T `json:"value" binding:"required"`
+}
+type NewBudgetEntryForm struct {
+	Transaction_Id int	`json:"transaction_id" binding:"required"`
+	Budget_Id 	   int	`json:"budget_id" binding:"required"`
+	Amount		   float64  `json:"amount" binding:"required"`
 }
 type NewTransactionForm struct {
 	Type_Id        int     `json:"type_id" binding:"required"`
