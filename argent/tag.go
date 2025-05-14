@@ -6,7 +6,7 @@ import (
 	"github.com/windingtheropes/budget/types"
 )
 
-func TagExists(tag_name string, user_id int) bool {
+func UserTagNameExists(tag_name string, user_id int) bool {
 	tags, err := GetUserTags(user_id)
 	if err != nil {
 		log.Fatal(err)
@@ -86,4 +86,33 @@ func TagExistsOnEntry(tag_id int, entry_id int) bool {
 		}
 	}
 	return false
+}
+
+func UserOwnsTag(user_id int, tag_id int) bool {
+	ownerships, err := GetUserTagOwnerships(user_id)
+	if err != nil {
+		return false
+	}
+	if len(ownerships) == 0 {
+		return false
+	}
+	for i := range ownerships {
+		ownership := ownerships[i]
+		if ownership.Tag_Id == tag_id {
+			return true
+		}
+	}
+	return false
+}
+
+func TagExists(tag_id int) bool {
+	tags, err := GetTagById(tag_id)
+	if err != nil {
+		return false
+	}
+	if len(tags) == 0 {
+		return false
+	} else {
+		return true
+	}
 }
