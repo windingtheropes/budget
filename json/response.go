@@ -2,7 +2,6 @@ package json
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/windingtheropes/budget/types"
 )
 
 type GenericResponse struct {
@@ -13,24 +12,12 @@ type SessionResponse struct {
 	Code  int    `json:"code"`
 	Token string `json:"token"`
 }
-type ListResponse struct {
-	Value []string `json:"value"`
-}
-type TransactionTypesResponse struct {
-	Value []types.TransactionType `json:"value"`
-}
-type HydratedTransactionsResponse struct {
-	Value []types.HydTransactionEntry `json:"value"`
-}
-type TagResponse struct {
-	Value []types.Tag `json:"value"`
-}
 type ValueResponse[T any] struct {
 	Value T `json:"value"`
 }
 type UserInfoResponse struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 

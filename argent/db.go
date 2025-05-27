@@ -52,7 +52,7 @@ func NewTag(name string) (int64, error) {
 
 // Create a new budget
 func NewBudget(name string, user_id int64, type_id int64, goal float64) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO budget (user_id, type_id, name, goal) VALUES (?, ?, ?, ?)", user_id, type_id, name, goal)
+	result, err := based.DB().Exec("INSERT INTO budget (user_id, type_id, budget_name, goal) VALUES (?, ?, ?, ?)", user_id, type_id, name, goal)
 	if err != nil {
 		return 0, fmt.Errorf("newBudget: %v", err)
 	}
@@ -93,16 +93,16 @@ func GetUserBudgets(user_id int64) ([]types.Budget, error) {
 	return budgets, nil
 }
 
-// Get all budget entries of budget budget_id
-func GetBudgetEntries(budget_id int64) ([]types.BudgetEntry, error) {
+// Get all budget entries  on transaction
+func GetBudgetEntries(transaction_id int64) ([]types.BudgetEntry, error) {
 	// store matching sessions in the slcie
 	var entries []types.BudgetEntry
 
-	rows, err := based.DB().Query("SELECT * FROM budget_entry WHERE budget_id = ?", budget_id)
+	rows, err := based.DB().Query("SELECT * FROM budget_entry WHERE transaction_id = ?", transaction_id)
 	// Catch error with query
 	if err != nil {
 		// token is sensitive
-		return nil, fmt.Errorf("getBudgetEntries %q: budget id %v", budget_id, err)
+		return nil, fmt.Errorf("getBudgetEntries %q: trans id %v", transaction_id, err)
 	}
 	defer rows.Close()
 
@@ -111,13 +111,41 @@ func GetBudgetEntries(budget_id int64) ([]types.BudgetEntry, error) {
 		var entry types.BudgetEntry
 		if err := rows.Scan(&entry.Id, &entry.Transaction_Id, &entry.Budget_Id, &entry.Amount); err != nil {
 			// Catch error casting to struct
-			return nil, fmt.Errorf("getBudgetEntries %q: budget id %v", budget_id, err)
+			return nil, fmt.Errorf("getBudgetEntries %q: trans id %v", transaction_id, err)
 		}
 		entries = append(entries, entry)
 	}
 	// Catch a row error
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("getBudgetEntries %q: budget id %v", budget_id, err)
+		return nil, fmt.Errorf("getBudgetEntries %q: trans id %v", transaction_id, err)
+	}
+	return entries, nil
+}
+
+func GetBudgetEntriesOnTransaction(transaction_id int64) ([]types.BudgetEntry, error) {
+	// store matching sessions in the slcie
+	var entries []types.BudgetEntry
+
+	rows, err := based.DB().Query("SELECT * FROM budget_entry WHERE transaction_id = ?", transaction_id)
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("GetBudgetEntriesOnTransaction %q: budget id %v", transaction_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var entry types.BudgetEntry
+		if err := rows.Scan(&entry.Id, &entry.Transaction_Id, &entry.Budget_Id, &entry.Amount); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("GetBudgetEntriesOnTransaction %q: budget id %v", transaction_id, err)
+		}
+		entries = append(entries, entry)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("GetBudgetEntriesOnTransaction %q: budget id %v", transaction_id, err)
 	}
 	return entries, nil
 }
@@ -436,7 +464,6 @@ func DeleteTag(tag_id int64) (bool, error) {
 	return true, nil
 }
 
-// Delete a budget entry
 func DeleteTagOnEntry(tag_id int64, entry_id int64) (bool, error) {
 	result, err := based.DB().Exec("DELETE FROM tag_assignment WHERE (tag_id=? AND entry_id=?)", tag_id, entry_id)
 	if err != nil {
@@ -445,6 +472,48 @@ func DeleteTagOnEntry(tag_id int64, entry_id int64) (bool, error) {
 
 	if _, err := result.LastInsertId(); err != nil {
 		return false, fmt.Errorf("deleteTagonentry: %v", err)
+	}
+
+	return true, nil
+}
+
+// Delete a budget entry
+func DeleteBudgetEntry(entry_id int64) (bool, error) {
+	result, err := based.DB().Exec("DELETE FROM budget_entry WHERE (id=?)", entry_id)
+	if err != nil {
+		return false, fmt.Errorf("deleteBudgetEntry: %v", err)
+	}
+
+	if _, err := result.LastInsertId(); err != nil {
+		return false, fmt.Errorf("deleteBudgetEntry: %v", err)
+	}
+
+	return true, nil
+}
+
+// Delete a budget
+func DeleteBudget(budget_id int64) (bool, error) {
+	result, err := based.DB().Exec("DELETE FROM budget WHERE (id=?)", budget_id)
+	if err != nil {
+		return false, fmt.Errorf("deleteBudget: %v", err)
+	}
+
+	if _, err := result.LastInsertId(); err != nil {
+		return false, fmt.Errorf("deleteBudget: %v", err)
+	}
+
+	return true, nil
+}
+
+// Delete a tag budget
+func DeleteTagBudget(tb_id int64) (bool, error) {
+	result, err := based.DB().Exec("DELETE FROM tag_budget WHERE (id=?)", tb_id)
+	if err != nil {
+		return false, fmt.Errorf("deleteTagBudget: %v", err)
+	}
+
+	if _, err := result.LastInsertId(); err != nil {
+		return false, fmt.Errorf("deleteTagBudget: %v", err)
 	}
 
 	return true, nil

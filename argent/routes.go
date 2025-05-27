@@ -13,7 +13,7 @@ import (
 // Authentication routes
 func LoadRoutes(engine *gin.Engine) {
 	// Get an entry and automatically hydrate it with tags
-	engine.GET("/api/argent/entry", func(ctx *gin.Context) {
+	engine.GET("/api/argent/transaction", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
@@ -27,7 +27,8 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		hydratedTransactions, err := HydrateTransactionsWithTags(transactions)
+		hydratedTransactions, err := HydrateTransactions(transactions)
+		fmt.Printf("%v\n", hydratedTransactions)
 		if err != nil {
 			fmt.Println(err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
@@ -35,7 +36,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.HydTransactionEntry]{Value: hydratedTransactions})
 	})
-	engine.POST("/api/argent/entry/new", func(ctx *gin.Context) {
+	engine.POST("/api/argent/transaction/new", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
@@ -71,7 +72,7 @@ func LoadRoutes(engine *gin.Engine) {
 
 		// create budget entries
 		for i := range body.Budget_Entries {
-			budget_entry := body.Budget_Entries[i]			
+			budget_entry := body.Budget_Entries[i]
 			if !BudgetExists(budget_entry.Budget_Id) {
 				json.AbortWithStatusMessage(ctx, 400, "Transaction does not exist.")
 				return
@@ -90,7 +91,7 @@ func LoadRoutes(engine *gin.Engine) {
 
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", transaction_id))
 	})
-	engine.DELETE("/api/argent/entry/delete", func(ctx *gin.Context) {
+	engine.DELETE("/api/argent/transaction/delete", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
@@ -122,11 +123,24 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
-		// Remove all tag assignments, because they are dependent on the existance of this entry
-		for i := 0; i < len(tags); i++ {
+
+		budget_entries, err := GetBudgetEntriesOnTransaction(transaction_id)
+		if err != nil {
+			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+			return
+		}
+		// Remove all tag assignments, because they are dependent on the existance of this transaction
+		for i := range tags {
 			tag := tags[i]
-			if _, err := DeleteTagOnEntry(tag.Id, transaction_id); err != nil {
-				fmt.Printf("%v\n", err)
+			if _, err := DeleteTagOnEntry(tag.Tag_Id, transaction_id); err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
+				return
+			}
+		}
+		// Remove all budget entry assignments, because they are dependent on the existance of this transaction
+		for i := range budget_entries {
+			budget_entry := budget_entries[i]
+			if _, err := DeleteBudgetEntry(budget_entry.Id); err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 				return
 			}
@@ -279,14 +293,14 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
-		ctx.AbortWithStatusJSON(200, json.ListResponse{Value: currencies})
+		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]string]{Value: currencies})
 	})
 	engine.GET("/api/argent/type", func(ctx *gin.Context) {
-		types, err := GetTransactionTypes()
+		transactionTypes, err := GetTransactionTypes()
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
-		ctx.AbortWithStatusJSON(200, json.TransactionTypesResponse{Value: types})
+		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.TransactionType]{Value: transactionTypes})
 	})
 }

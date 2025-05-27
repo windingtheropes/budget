@@ -4,12 +4,9 @@ DELETE /api/argent/entry/delete
 
 GET /api/argent/tag
 POST /api/argent/tag/new
-POST /api/argent/tag/budget/new
 
 GET /api/argent/budget
 POST /api/argent/budget/new
-POST /api/argent/budget/entry/new
-
 
 UNAUTHENTICATED/STATIC ROUTES
 

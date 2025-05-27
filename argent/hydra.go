@@ -4,29 +4,28 @@ import (
 	"github.com/windingtheropes/budget/types"
 )
 
-func HydrateTransactionsWithTags(transactions []types.TransactionEntry) ([]types.HydTransactionEntry, error) {
+func HydrateTransactions(transactions []types.TransactionEntry) ([]types.HydTransactionEntry, error) {
 	var hydratedTransactions []types.HydTransactionEntry
 	for i := range transactions {
-		d_trans := transactions[i]
-		tags, err := GetTransactionTags(d_trans.Id)
+		transaction := transactions[i]
+		tags, err := GetTransactionTags(transaction.Id)
 		if err != nil {
 			return nil, err
 		}
-		budget_entries, err := GetBudgetEntries(d_trans.Id)
+		budget_entries, err := GetBudgetEntries(transaction.Id)
 		if err != nil {
 			return nil, err
 		}
-
 		hydratedTransactions = append(hydratedTransactions, types.HydTransactionEntry{
-			Id:             d_trans.Id,
-			User_Id:        d_trans.User_Id,
-			Type_Id:        d_trans.Type_Id,
-			Msg:            d_trans.Msg,
-			Amount:         d_trans.Amount,
-			Currency:       d_trans.Currency,
+			Id:             transaction.Id,
+			User_Id:        transaction.User_Id,
+			Type_Id:        transaction.Type_Id,
+			Msg:            transaction.Msg,
+			Amount:         transaction.Amount,
+			Currency:       transaction.Currency,
 			Tags:           tags,
-			Unix_Timestamp: d_trans.Unix_Timestamp,
-			Vendor:         d_trans.Vendor,
+			Unix_Timestamp: transaction.Unix_Timestamp,
+			Vendor:         transaction.Vendor,
 			Budget_Entries: budget_entries,
 		})
 	}
@@ -42,8 +41,8 @@ func HydrateTagsWithTagBudgets(tags []types.Tag) ([]types.HydTag, error) {
 			return nil, err
 		}
 		hydratedTags = append(hydratedTags, types.HydTag{
-			Id:      tag.Id,
-			Name:    tag.Name,
+			Id:          tag.Id,
+			Name:        tag.Name,
 			Tag_Budgets: tagBudgets,
 		})
 	}

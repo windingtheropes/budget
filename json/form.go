@@ -42,5 +42,5 @@ type TransactionForm struct {
 	Tags           []int64   `json:"tags"`
 	Unix_Timestamp int64     `json:"unix_timestamp" binding:"required"`
 	Vendor         string  `json:"vendor"`
-	Budget_Entries []BudgetEntryForm
+	Budget_Entries []BudgetEntryForm `json:"budget_entries"`
 }

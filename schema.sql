@@ -35,16 +35,14 @@ CREATE TABLE transaction_entry (
 );
 CREATE TABLE tag (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    tag_name    VARCHAR(128),
-    FOREIGN KEY (user_id) REFERENCES usr(id)
+    tag_name    VARCHAR(128)
 );
 CREATE TABLE tag_ownership (
     id  INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     tag_id  INT NOT NULL, 
     user_id INT NOT NULL,
-    FOREIGN KEY (tag_id) REFERENCES tag(id),
-    FOREIGN KEY (entry_id) REFERENCES transaction_entry(id)
-)
+    FOREIGN KEY (tag_id) REFERENCES tag(id)
+);
 CREATE TABLE tag_assignment (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     tag_id      INT NOT NULL,
