@@ -28,7 +28,6 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 		hydratedTransactions, err := HydrateTransactions(transactions)
-		fmt.Printf("%v\n", hydratedTransactions)
 		if err != nil {
 			fmt.Println(err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
