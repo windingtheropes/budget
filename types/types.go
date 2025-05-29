@@ -9,7 +9,8 @@ type UserID int64
 type Email string
 type User struct {
 	Id       int64
-	Name     string
+	First_Name     string
+	Last_Name string
 	Email    string
 	Password string
 }
@@ -25,6 +26,7 @@ type Currency struct {
 type TransactionType struct {
 	Id   int64
 	Name string
+	Positive bool
 }
 type TransactionEntry struct {
 	Id             int64
@@ -76,7 +78,6 @@ type Budget struct {
 	Id      int64
 	User_Id int64
 	Name    string
-	Type_Id int64
 	Goal    float64
 }
 

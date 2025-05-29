@@ -3,9 +3,11 @@ CREATE DATABASE budget;
 USE budget;
 CREATE TABLE usr (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    full_name    VARCHAR(128),
+    first_name    VARCHAR(128),
+    last_name   VARCHAR(128),
     email        VARCHAR(128),
-    pass         VARCHAR(128)
+    pass         VARCHAR(128),
+    user_data    JSON
 );
 CREATE TABLE session (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
@@ -19,7 +21,8 @@ CREATE TABLE foreign_currency (
 );
 CREATE TABLE transaction_type (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    type_name   VARCHAR(128)
+    type_name   VARCHAR(128),
+    positive    BOOLEAN
 );
 CREATE TABLE transaction_entry (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
@@ -56,11 +59,9 @@ CREATE TABLE tag_assignment (
 CREATE TABLE budget (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     user_id     INT,
-    type_id     INT,
     budget_name VARCHAR(128),
     goal         FLOAT,
-    FOREIGN KEY (user_id) REFERENCES usr(id),
-    FOREIGN KEY (type_id) REFERENCES transaction_type(id)
+    FOREIGN KEY (user_id) REFERENCES usr(id)
 );
 
 CREATE TABLE budget_entry (
@@ -82,3 +83,4 @@ CREATE TABLE tag_budget (
     FOREIGN KEY (budget_id) REFERENCES budget(id),
     FOREIGN KEY (type_id) REFERENCES transaction_type(id)
 );
+

@@ -31,7 +31,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 
 		// Password not hashed
-		user_id, err := AddUser(body.Name, body.Email, body.Password)
+		user_id, err := AddUser(body.First_Name, body.Last_Name, body.Email, body.Password)
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -106,7 +106,8 @@ func LoadRoutes(engine *gin.Engine) {
 
 		ctx.AbortWithStatusJSON(200, json.UserInfoResponse{
 			Id:    usr.Id,
-			Name:  usr.Name,
+			First_Name:  usr.First_Name,
+			Last_Name: usr.Last_Name,
 			Email: usr.Email,
 		})
 	})

@@ -35,7 +35,7 @@ func GetUser[T types.UserIdentifier](identifier T) ([]types.User, error) {
     // Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
         var usr types.User
-        if err := rows.Scan(&usr.Id, &usr.Name, &usr.Email, &usr.Password); err != nil {
+        if err := rows.Scan(&usr.Id, &usr.First_Name, &usr.Last_Name, &usr.Email, &usr.Password); err != nil {
 			// Catch error casting to struct
             return nil, fmt.Errorf("getUser %q: %v", identifier, err)
         }
@@ -49,8 +49,8 @@ func GetUser[T types.UserIdentifier](identifier T) ([]types.User, error) {
 }
 
 // Add a user, returning its id
-func AddUser(full_name string, email string, pass_hashed string) (int64, error) {
-    result, err := based.DB().Exec("INSERT INTO usr (full_name, email, pass) VALUES (?,?,?)", full_name, email, pass_hashed)
+func AddUser(first_name string, last_name string, email string, pass_hashed string) (int64, error) {
+    result, err := based.DB().Exec("INSERT INTO usr (first_name, last_name, email, pass, user_data) VALUES (?,?,?,?)", first_name, last_name, email, pass_hashed)
     if err != nil {
         return 0, fmt.Errorf("addUser: %v", err)
     }

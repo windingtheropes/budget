@@ -80,7 +80,7 @@ func GetUserBudgets(user_id int64) ([]types.Budget, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var budget types.Budget
-		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Type_Id, &budget.Name, &budget.Goal); err != nil {
+		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Name, &budget.Goal); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getBudgets %q: user id %v", user_id, err)
 		}
@@ -250,7 +250,7 @@ func GetTransactionTypes() ([]types.TransactionType, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var transaction_type types.TransactionType
-		if err := rows.Scan(&transaction_type.Id, &transaction_type.Name); err != nil {
+		if err := rows.Scan(&transaction_type.Id, &transaction_type.Name, &transaction_type.Positive); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getTransactionTypes %v", err)
 		}
@@ -363,7 +363,7 @@ func GetBudgetById(budget_id int64) ([]types.Budget, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var budget types.Budget
-		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Type_Id, &budget.Name, &budget.Goal); err != nil {
+		if err := rows.Scan(&budget.Id, &budget.User_Id, &budget.Name, &budget.Goal); err != nil {
 			// Catch error casting to struct
 			return nil, fmt.Errorf("getbudget %q: %v", budget_id, err)
 		}

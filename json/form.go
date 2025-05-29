@@ -1,7 +1,8 @@
 package json
 
 type AccountForm struct {
-	Name     string `json:"name" binding:"required"`
+	First_Name     string `json:"first_name" binding:"required"`
+	Last_Name 	string `json:"last_name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
