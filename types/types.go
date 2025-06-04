@@ -4,7 +4,6 @@ type UserIdentifier interface {
 	Email | UserID
 }
 
-
 type UserID int64
 type Email string
 type User struct {
@@ -66,6 +65,12 @@ type HydTag struct {
 	Id         int64
 	User_Id    int64
 	Name       string
+	Tag_Budgets []TagBudget
+}
+type HydBudget struct {
+	Id         int64
+	Name       string
+	Goal 	   float64
 	Tag_Budgets []TagBudget
 }
 type TagOwnership struct {

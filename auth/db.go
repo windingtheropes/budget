@@ -50,7 +50,7 @@ func GetUser[T types.UserIdentifier](identifier T) ([]types.User, error) {
 
 // Add a user, returning its id
 func AddUser(first_name string, last_name string, email string, pass_hashed string) (int64, error) {
-    result, err := based.DB().Exec("INSERT INTO usr (first_name, last_name, email, pass, user_data) VALUES (?,?,?,?)", first_name, last_name, email, pass_hashed)
+    result, err := based.DB().Exec("INSERT INTO usr (first_name, last_name, email, pass) VALUES (?,?,?,?)", first_name, last_name, email, pass_hashed)
     if err != nil {
         return 0, fmt.Errorf("addUser: %v", err)
     }

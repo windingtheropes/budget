@@ -167,12 +167,12 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		hydTags, err := HydrateTagsWithTagBudgets(tags)
-		if err != nil {
-			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
-			return
-		}
-		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.HydTag]{Value: hydTags})
+		// hydTags, err := HydrateTagsWithTagBudgets(tags)
+		// if err != nil {
+		// 	json.AbortWithStatusMessage(ctx, 500, "Internal error.")
+		// 	return
+		// }
+		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.Tag]{Value: tags})
 	})
 	// List user budgets
 	engine.GET("/api/argent/budget", func(ctx *gin.Context) {
@@ -188,11 +188,13 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
+		hydBudgets, err := HydrateBudgetsWithTagBudgets(budgets)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.Budget]{Value: budgets})
+
+		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.HydBudget]{Value: hydBudgets})
 	})
 	engine.POST("/api/argent/tag/new", func(ctx *gin.Context) {
 		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
@@ -217,33 +219,6 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		// try to load each tagbudget
-		for i := range body.Tag_Budgets {
-			tagBudget := body.Tag_Budgets[i]
-			if !TagExists(tag_id) {
-				json.AbortWithStatusMessage(ctx, 400, "Tag does not exist.")
-				return
-			}
-			if !UserOwnsTag(usr.Id, tag_id) {
-				json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
-				return
-			}
-			if !BudgetExists(tagBudget.Budget_Id) {
-				json.AbortWithStatusMessage(ctx, 400, "Budget does not exist.")
-				return
-			}
-			if !UserOwnsBudget(usr.Id, tagBudget.Budget_Id) {
-				json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
-				return
-			}
-
-			// create tagbudget
-			_, err := NewTagBudget(tag_id, tagBudget.Budget_Id, tagBudget.Goal, tagBudget.Type_Id)
-			if err != nil {
-				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
-				return
-			}
-		}
 
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created tag %v (%v).", body.Name, tag_id))
 	})
@@ -256,6 +231,7 @@ func LoadRoutes(engine *gin.Engine) {
 		usr := usrs[0]
 
 		var body json.BudgetForm
+		
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
@@ -264,12 +240,31 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 400, "Budget exists.")
 			return
 		}
-		id, err := NewBudget(body.Name, usr.Id, body.Type_Id, body.Goal)
+		budget_id, err := NewBudget(body.Name, usr.Id, *body.Goal)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created budget %v (%v).", body.Name, id))
+		// Try to load each tagbudget
+		for i := range body.Tag_Budgets {
+			tagBudget := body.Tag_Budgets[i]
+			if !TagExists(tagBudget.Tag_Id) {
+				json.AbortWithStatusMessage(ctx, 400, "Tag does not exist.")
+				return
+			}
+			if !UserOwnsTag(usr.Id, tagBudget.Tag_Id) {
+				json.AbortWithStatusMessage(ctx, 403, "Access Denied.")
+				return
+			}
+
+			// create tagbudget
+			_, err := NewTagBudget(tagBudget.Tag_Id, budget_id, tagBudget.Goal, tagBudget.Type_Id)
+			if err != nil {
+				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
+				return
+			}
+		}
+		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created budget %v (%v).", body.Name, budget_id))
 	})
 	// THESE NEED TO BE CACHED
 	engine.GET("/api/argent/currency/exchange", func(ctx *gin.Context) {

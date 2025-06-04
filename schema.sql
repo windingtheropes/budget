@@ -6,8 +6,7 @@ CREATE TABLE usr (
     first_name    VARCHAR(128),
     last_name   VARCHAR(128),
     email        VARCHAR(128),
-    pass         VARCHAR(128),
-    user_data    JSON
+    pass         VARCHAR(128)
 );
 CREATE TABLE session (
     id          INT AUTO_INCREMENT NOT NULL PRIMARY KEY,

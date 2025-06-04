@@ -51,8 +51,8 @@ func NewTag(name string) (int64, error) {
 }
 
 // Create a new budget
-func NewBudget(name string, user_id int64, type_id int64, goal float64) (int64, error) {
-	result, err := based.DB().Exec("INSERT INTO budget (user_id, type_id, budget_name, goal) VALUES (?, ?, ?, ?)", user_id, type_id, name, goal)
+func NewBudget(name string, user_id int64, goal float64) (int64, error) {
+	result, err := based.DB().Exec("INSERT INTO budget (user_id, budget_name, goal) VALUES (?, ?, ?)", user_id, name, goal)
 	if err != nil {
 		return 0, fmt.Errorf("newBudget: %v", err)
 	}
@@ -151,7 +151,7 @@ func GetBudgetEntriesOnTransaction(transaction_id int64) ([]types.BudgetEntry, e
 }
 
 // Get budget on a tag
-func GetTagBudget(tag_id int64) ([]types.TagBudget, error) {
+func GetTagBudgetsByTagId(tag_id int64) ([]types.TagBudget, error) {
 	// store matching sessions in the slcie
 	var tagBudgets []types.TagBudget
 
@@ -175,6 +175,35 @@ func GetTagBudget(tag_id int64) ([]types.TagBudget, error) {
 	// Catch a row error
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("getTagBudget %q: tag id %v", tag_id, err)
+	}
+	return tagBudgets, nil
+}
+
+// Get budget on a tag
+func GetTagBudgetsByBudgetId(budget_id int64) ([]types.TagBudget, error) {
+	// store matching sessions in the slcie
+	var tagBudgets []types.TagBudget
+
+	rows, err := based.DB().Query("SELECT * FROM tag_budget WHERE budget_id = ?", budget_id)
+	// Catch error with query
+	if err != nil {
+		// token is sensitive
+		return nil, fmt.Errorf("getTagBudget %q: budget id %v", budget_id, err)
+	}
+	defer rows.Close()
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var tagBudget types.TagBudget
+		if err := rows.Scan(&tagBudget.Id, &tagBudget.Tag_Id, &tagBudget.Budget_Id, &tagBudget.Goal, &tagBudget.Type_Id); err != nil {
+			// Catch error casting to struct
+			return nil, fmt.Errorf("getTagBudget %q: budget id %v", budget_id, err)
+		}
+		tagBudgets = append(tagBudgets, tagBudget)
+	}
+	// Catch a row error
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("getTagBudget %q: budget id %v", budget_id, err)
 	}
 	return tagBudgets, nil
 }
@@ -343,6 +372,7 @@ func GetUserTagOwnerships(user_id int64) ([]types.TagOwnership, error) {
 	}
 	return ownership_records, nil
 }
+
 // Get a budget from the database.
 func GetBudgetById(budget_id int64) ([]types.Budget, error) {
 	// store matching sessions in the slice
@@ -375,6 +405,7 @@ func GetBudgetById(budget_id int64) ([]types.Budget, error) {
 	}
 	return budgets, nil
 }
+
 // Get a tag from the database. Identifier is of type TagIdentifier, which can be a TagID or UserID.
 func GetTagById(tag_id int64) ([]types.Tag, error) {
 	// store matching sessions in the slice
