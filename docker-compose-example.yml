@@ -1,0 +1,25 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    ports:
+      - "3306:3306/tcp"
+    volumes:
+      
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_DATABASE: 
+      MYSQL_USER: 
+      MYSQL_PASSWORD: 
+  backend:
+    image: windingtherope/budget-backend
+    restart: always
+    ports:
+      - "3000:80"
+    # volumes:
+    environment:
+      DB: 
+      DBUSER:
+      DBPASS:
+      DBADDR: 
+

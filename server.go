@@ -21,7 +21,15 @@ func main() {
 	argent.LoadRoutes(engine)
 	engine.SetTrustedProxies(nil)
 
-	engine.Run(fmt.Sprintf("localhost:%v", os.Getenv("WEBPORT")))
+	// for docker deployment, specifying a different ip to listen on
+	var ip string;
+	if os.Getenv("WEBIP") != "" {
+		ip = os.Getenv("WEBIP")
+	} else {
+		ip = "localhost"
+	}
+
+	engine.Run(fmt.Sprintf("%v:%v", ip ,os.Getenv("WEBPORT")))
 }
 
 func CORSMiddleware() gin.HandlerFunc {
