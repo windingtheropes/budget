@@ -1,25 +1,14 @@
 services:
   db:
-    image: mysql
-    restart: always
     ports:
       - "3306:3306/tcp"
-    volumes:
-      
-    environment:
-      MYSQL_ROOT_PASSWORD: 
-      MYSQL_DATABASE: 
-      MYSQL_USER: 
-      MYSQL_PASSWORD: 
-  backend:
-    image: windingtherope/budget-backend
+    image: mysql
     restart: always
-    ports:
-      - "3000:80"
-    # volumes:
+    volumes:
+      - ${MSQLCONFPATH}:/etc/mysql/conf.d
+      - ${MSQLDATAPATH}:/var/lib/mysql
     environment:
-      DB: 
-      DBUSER:
-      DBPASS:
-      DBADDR: 
-
+      MYSQL_ROOT_PASSWORD: ${DBPASS}
+      MYSQL_DATABASE: ${DB}
+      MYSQL_USER: ${DBUSER}
+      MYSQL_PASSWORD: ${DBPASS}
