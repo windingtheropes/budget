@@ -21,7 +21,7 @@ func GetTokenFromRequest(ctx *gin.Context) string {
 
 // Authentication middleware, returns either ([200], [user]), ([4-5xx], nil)
 func GetUserFromRequestNew(token string) (int, []types.User) {
-	s, err := GetSession(token)
+	s, err := SessionTable.Get("token=?", token)
 	if err != nil {
 		return 500, nil
 	}
@@ -30,11 +30,11 @@ func GetUserFromRequestNew(token string) (int, []types.User) {
 		return 403, nil
 	}  
 	session := s[0]
-	if !session.IsValid() {
+	if !IsValidSession(&session) {
 		// Token expired
 		return 403, nil
 	}
-	usrs, err := GetUser(types.UserID(session.User_Id));
+	usrs, err := UserTable.Get("id=?", session.User_Id)
 	if err != nil {
 		return 500, nil
 	}
