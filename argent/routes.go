@@ -21,7 +21,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		transactions, err := GetUserTransactions(usr.Id)
+		transactions, err := TransactionTable.Get("user_id=?", usr.Id)
 		if err != nil {
 			fmt.Println(err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
@@ -52,7 +52,15 @@ func LoadRoutes(engine *gin.Engine) {
 		if body.Amount == 0 {
 			json.AbortWithStatusMessage(ctx, 400, "Amount cannot be zero.")
 		}
-		transaction_id, err := NewTransaction(usr.Id, body.Type_Id, body.Amount, body.Currency, body.Msg, body.Unix_Timestamp, body.Vendor)
+		transaction_id, err := TransactionTable.New(types.TransactionEntryForm{
+			User_Id:        usr.Id,
+			Type_Id:        body.Type_Id,
+			Amount:         body.Amount,
+			Currency:       body.Currency,
+			Msg:            body.Msg,
+			Unix_Timestamp: body.Unix_Timestamp,
+			Vendor:         body.Vendor,
+		})
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
@@ -62,7 +70,10 @@ func LoadRoutes(engine *gin.Engine) {
 		// add tags
 		for i := range body.Tags {
 			tag_id := body.Tags[i]
-			_, err := NewTagAssignment(tag_id, transaction_id)
+			_, err := TagAssignmentTable.New(types.TagAssignmentForm{
+				Tag_Id:         tag_id,
+				Transaction_Id: transaction_id,
+			})
 			if err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
 				return
@@ -81,7 +92,11 @@ func LoadRoutes(engine *gin.Engine) {
 				return
 			}
 
-			_, err := NewBudgetEntry(transaction_id, budget_entry.Budget_Id, budget_entry.Amount)
+			_, err := BudgetEntryTable.New(types.BudgetEntryForm{
+				Transaction_Id: transaction_id,
+				Budget_Id: budget_entry.Budget_Id,
+				Amount: budget_entry.Amount,
+			})
 			if err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
 				return
@@ -116,14 +131,14 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 
-		tags, err := GetTagAssignments(transaction_id)
+		tags, err := TagAssignmentTable.Get("entry_id = ?", transaction_id)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
 		}
 
-		budget_entries, err := GetBudgetEntriesOnTransaction(transaction_id)
+		budget_entries, err := BudgetEntryTable.Get("transaction_id=?", transaction_id)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
@@ -131,7 +146,7 @@ func LoadRoutes(engine *gin.Engine) {
 		// Remove all tag assignments, because they are dependent on the existance of this transaction
 		for i := range tags {
 			tag := tags[i]
-			if _, err := DeleteTagOnEntry(tag.Tag_Id, transaction_id); err != nil {
+			if _, err := TagAssignmentTable.Delete("(tag_id=? AND entry_id=?)", tag.Tag_Id, transaction_id); err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 				return
 			}
@@ -139,13 +154,13 @@ func LoadRoutes(engine *gin.Engine) {
 		// Remove all budget entry assignments, because they are dependent on the existance of this transaction
 		for i := range budget_entries {
 			budget_entry := budget_entries[i]
-			if _, err := DeleteBudgetEntry(budget_entry.Id); err != nil {
+			if _, err := BudgetEntryTable.Delete("id=?",budget_entry.Id); err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 				return
 			}
 		}
 
-		if _, err := DeleteTransaction(transaction_id); err != nil {
+		if _, err := TransactionTable.Delete("id=?", transaction_id); err != nil {
 			fmt.Printf("%v\n", err)
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return
@@ -183,7 +198,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 		usr := usrs[0]
 
-		budgets, err := GetUserBudgets(usr.Id)
+		budgets, err := BudgetTable.Get("user_id=?", usr.Id)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
@@ -231,7 +246,7 @@ func LoadRoutes(engine *gin.Engine) {
 		usr := usrs[0]
 
 		var body json.BudgetForm
-		
+
 		if err := ctx.ShouldBindJSON(&body); err != nil {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
@@ -240,7 +255,11 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 400, "Budget exists.")
 			return
 		}
-		budget_id, err := NewBudget(body.Name, usr.Id, *body.Goal)
+		budget_id, err := BudgetTable.New(types.BudgetForm{
+			Name: body.Name,
+			User_Id: usr.Id,
+			Goal: *body.Goal,
+		})
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
@@ -258,7 +277,12 @@ func LoadRoutes(engine *gin.Engine) {
 			}
 
 			// create tagbudget
-			_, err := NewTagBudget(tagBudget.Tag_Id, budget_id, tagBudget.Goal, tagBudget.Type_Id)
+			_, err := TagBudgetTable.New(types.TagBudgetForm{
+				Tag_Id:    tagBudget.Tag_Id,
+				Budget_Id: budget_id,
+				Goal:      tagBudget.Goal,
+				Type_Id:   tagBudget.Type_Id,
+			})
 			if err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
 				return
@@ -290,7 +314,7 @@ func LoadRoutes(engine *gin.Engine) {
 		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]string]{Value: currencies})
 	})
 	engine.GET("/api/argent/type", func(ctx *gin.Context) {
-		transactionTypes, err := GetTransactionTypes()
+		transactionTypes, err := TransactionTypeTable.Get("*")
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 			return

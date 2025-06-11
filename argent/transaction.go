@@ -1,8 +1,15 @@
 package argent
-import ()
+
+import (
+	"github.com/windingtheropes/budget/types"
+	"github.com/windingtheropes/budget/based"
+)
+
+var TransactionTable = based.NewTable[types.TransactionEntry, types.TransactionEntryForm]("transaction_entry")
+var TransactionTypeTable = based.NewTable[types.TransactionType, types.TransactionTypeForm]("transaction_type")
 
 func UserOwnsTransaction(user_id int64, transaction_id int64) bool {
-	transactions, err := GetTransactionById(transaction_id)
+	transactions, err := TransactionTable.Get("(id=?)", transaction_id)
 	if err != nil {
 		return false
 	}
@@ -16,7 +23,7 @@ func UserOwnsTransaction(user_id int64, transaction_id int64) bool {
 }
 
 func TransactionExists(transaction_id int64) bool {
-	transactions, err := GetTransactionById(transaction_id)
+	transactions, err := TransactionTable.Get("(id=?)", transaction_id)
 	if err != nil {
 		return false
 	}

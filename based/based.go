@@ -26,6 +26,7 @@ func InitDB()  {
         Addr:   os.Getenv("DBADDR"),
         DBName: os.Getenv("DB"),
     }
+    
     // Get a database handle.
     var err error
     db, err = sql.Open("mysql", cfg.FormatDSN())

@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/json"
@@ -19,7 +20,7 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 
-		users, err := GetUser(types.Email(body.Email))
+		users, err :=  UserTable.Get("email=?", body.Email)
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -31,7 +32,12 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 
 		// Password not hashed
-		user_id, err := AddUser(body.First_Name, body.Last_Name, body.Email, body.Password)
+		user_id, err := UserTable.New(types.UserForm{
+			First_Name: body.First_Name,
+			Last_Name: body.Last_Name,
+			Email: body.Email,
+			Password: body.Password,
+		})
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -51,7 +57,7 @@ func LoadRoutes(engine *gin.Engine) {
 		}
 
 		// catch unknown errors
-		users, err := GetUser(types.Email(body.Email))
+		users, err := UserTable.Get("email=?", body.Email)
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -60,13 +66,17 @@ func LoadRoutes(engine *gin.Engine) {
 		if len(users) == 1 {
 			usr := users[0]
 			if body.Password == usr.Password {
-				t, _, err := NewSession(usr.Id, (60 * 60 * 4))
+				token := GenToken(64)
+				_, err :=  SessionTable.New(types.SessionForm{
+					Token: GenToken(64),
+					User_Id: usr.Id,
+					Expiry: time.Now().Unix() + (60 * 60 * 4),
+				}) 
 				if err != nil {
 					log.Fatal(err)
 					json.AbortWithStatusMessage(ctx, 500, "Interal error.")
 					return
 				}
-				var token string = t[0]
 
 				ctx.AbortWithStatusJSON(200, json.SessionResponse{
 					Code:  200,

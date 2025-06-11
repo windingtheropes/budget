@@ -12,7 +12,7 @@ func HydrateTransactions(transactions []types.TransactionEntry) ([]types.HydTran
 		if err != nil {
 			return nil, err
 		}
-		budget_entries, err := GetBudgetEntries(transaction.Id)
+		budget_entries, err := BudgetEntryTable.Get("transaction_id=?",transaction.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +36,7 @@ func HydrateTagsWithTagBudgets(tags []types.Tag) ([]types.HydTag, error) {
 	var hydratedTags []types.HydTag
 	for i := range tags {
 		tag := tags[i]
-		tagBudgets, err := GetTagBudgetsByTagId(tag.Id)
+		tagBudgets, err := TagBudgetTable.Get("tag_id=?", tag.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -53,14 +53,14 @@ func HydrateBudgetsWithTagBudgets(budgets []types.Budget) ([]types.HydBudget, er
 	var hydratedBudgets []types.HydBudget
 	for i := range budgets {
 		budget := budgets[i]
-		tagBudgets, err := GetTagBudgetsByBudgetId(budget.Id)
+		tagBudgets, err := TagBudgetTable.Get("budget_id=?", budget.Id)
 		if err != nil {
 			return nil, err
 		}
 		hydratedBudgets = append(hydratedBudgets, types.HydBudget{
 			Id:          budget.Id,
 			Name:        budget.Name,
-			Goal: 		 budget.Goal,
+			Goal:        budget.Goal,
 			Tag_Budgets: tagBudgets,
 		})
 	}
@@ -70,7 +70,10 @@ func HydrateBudgetsWithTagBudgets(budgets []types.Budget) ([]types.HydBudget, er
 func AddTagsById(transaction_id int64, tag_ids []int64) error {
 	// var assignment_ids []int64;
 	for i := range tag_ids {
-		_, err := NewTagAssignment(tag_ids[i], transaction_id)
+		_, err := TagAssignmentTable.New(types.TagAssignmentForm{
+			Tag_Id:         tag_ids[i],
+			Transaction_Id: transaction_id,
+		})
 		if err != nil {
 			return err
 		}
