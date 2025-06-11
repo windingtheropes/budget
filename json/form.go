@@ -14,7 +14,7 @@ type SessionForm struct {
 	Token string `json:"token"`
 }
 type TagForm struct {
-	Name        string          `json:"name" bindings:"required"`
+	Name        string   	`json:"name" bindings:"required"`
 }
 type BudgetForm struct {
 	Name string  `json:"name" binding:"required"`

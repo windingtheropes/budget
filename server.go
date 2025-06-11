@@ -14,13 +14,11 @@ import (
 func main() {
 	dotenv.Init()
 	based.InitDB()
-
 	engine := gin.Default()
 	engine.Use(CORSMiddleware())
 	auth.LoadRoutes(engine)
 	argent.LoadRoutes(engine)
 	engine.SetTrustedProxies(nil)
-
 	// for docker deployment, specifying a different ip to listen on
 	var ip string;
 	if os.Getenv("WEBIP") != "" {

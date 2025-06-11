@@ -2,16 +2,15 @@ package based
 
 import (
 	"github.com/go-sql-driver/mysql"
-    "github.com/jmoiron/sqlx"
-	// "database/sql"
+	"database/sql"
 	"os"
 	"fmt"
 	"log"
 )
 
-var db *sqlx.DB
+var db *sql.DB
 
-func DB() *sqlx.DB {
+func DB() *sql.DB {
     if db == nil {
         log.Fatal("DB uninitialized.")
     }
@@ -27,10 +26,10 @@ func InitDB()  {
         Addr:   os.Getenv("DBADDR"),
         DBName: os.Getenv("DB"),
     }
+    
     // Get a database handle.
     var err error
-    db, err = sqlx.Open("mysql", cfg.FormatDSN())
-    // db, err = sql.Open("mysql", cfg.FormatDSN())
+    db, err = sql.Open("mysql", cfg.FormatDSN())
     if err != nil {
         log.Fatal(err)
     }

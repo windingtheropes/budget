@@ -11,8 +11,20 @@ type Table[Data any, Form any] struct {
 	insertion_snippet string
 }
 
-func (t *Table[Data, Form]) Get(condition string, args... any) ([]Data, error) {
-	rows, err := DB().Query(fmt.Sprintf("SELECT * FROM %v WHERE %v", t.name, condition), args...)
+// Get an array of Data rows from the table by a sql_condition. 
+// Will substitute `?` in order that args are passed.
+// 
+// ex. Get("user_id=?",user_id)
+func (t *Table[Data, Form]) Get(sql_condition string, args... any) ([]Data, error) {
+	var query string
+
+	// Allow for a wildcard shortcut
+	if(sql_condition == "*") {
+		query = fmt.Sprintf("SELECT * FROM %v", t.name)
+	} else {
+		query = fmt.Sprintf("SELECT * FROM %v WHERE %v", t.name, sql_condition)
+	}
+	rows, err := DB().Query(query, args...)
 	var data_rows []Data
 
 	// Catch error with query
@@ -55,6 +67,7 @@ func (t *Table[Data, Form]) Get(condition string, args... any) ([]Data, error) {
 	}
 	return data_rows, nil
 }
+// Add a row from the table given a Form struct
 func (t *Table[Data, Form]) New(row Form) (int64, error) {
 	query_ph := fmt.Sprintf("INSERT INTO %v %v", t.name, t.insertion_snippet)
 
@@ -75,8 +88,11 @@ func (t *Table[Data, Form]) New(row Form) (int64, error) {
 	}
 	return id, nil
 }
-func (t *Table[Data, Form]) Delete(condition string, args... any) (bool, error) {
-	query := fmt.Sprintf("DELETE FROM %v WHERE %v", t.name, condition)
+// Delete a row from the table by a sql_condition. Will substitute `?` in order that args are passed.
+// 
+// ex. Delete("id=?",entry_id)
+func (t *Table[Data, Form]) Delete(sql_condition string, args... any) (bool, error) {
+	query := fmt.Sprintf("DELETE FROM %v WHERE %v", t.name, sql_condition)
 	result, err := DB().Exec(query, args...)
 	if err != nil {
 		return false, fmt.Errorf("delete %v: %v", t.name, err)
@@ -88,6 +104,16 @@ func (t *Table[Data, Form]) Delete(condition string, args... any) (bool, error) 
 
 	return true, nil
 }
+
+// Create a new Table
+// 
+// Data is the container struct for rows, 
+// the amount of fields must match the amount of columns
+//
+// Form is the struct for creating new rows, should not include the primary key.
+// Form must be annotated with `db:"{column_name}"` tags
+// 
+// `name` is the name of the table in the database
 func NewTable[Data any, Form any](name string) Table[Data, Form] {
 	var f Form
 
