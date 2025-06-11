@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/windingtheropes/budget/tables"
 	"github.com/windingtheropes/budget/auth"
 	"github.com/windingtheropes/budget/json"
+	"github.com/windingtheropes/budget/tables"
 	"github.com/windingtheropes/budget/types"
 )
 
@@ -15,12 +15,11 @@ import (
 func LoadRoutes(engine *gin.Engine) {
 	// Get an entry and automatically hydrate it with tags
 	engine.GET("/api/argent/transaction", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		transactions, err := tables.Transaction.Get("user_id=?", usr.Id)
 		if err != nil {
@@ -37,12 +36,11 @@ func LoadRoutes(engine *gin.Engine) {
 		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.HydTransactionEntry]{Value: hydratedTransactions})
 	})
 	engine.POST("/api/argent/transaction/new", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		var body json.TransactionForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
@@ -95,8 +93,8 @@ func LoadRoutes(engine *gin.Engine) {
 
 			_, err := tables.BudgetEntry.New(types.BudgetEntryForm{
 				Transaction_Id: transaction_id,
-				Budget_Id: budget_entry.Budget_Id,
-				Amount: budget_entry.Amount,
+				Budget_Id:      budget_entry.Budget_Id,
+				Amount:         budget_entry.Amount,
 			})
 			if err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error")
@@ -107,14 +105,12 @@ func LoadRoutes(engine *gin.Engine) {
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Entry added with ID %v", transaction_id))
 	})
 	engine.DELETE("/api/argent/transaction/delete", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
-		// TODO relatively unsafe
 		var transaction_query = ctx.Request.URL.Query().Get("id")
 		transaction_id, err := strconv.ParseInt(transaction_query, 0, 64)
 		if err != nil {
@@ -155,7 +151,7 @@ func LoadRoutes(engine *gin.Engine) {
 		// Remove all budget entry assignments, because they are dependent on the existance of this transaction
 		for i := range budget_entries {
 			budget_entry := budget_entries[i]
-			if _, err := tables.BudgetEntry.Delete("id=?",budget_entry.Id); err != nil {
+			if _, err := tables.BudgetEntry.Delete("id=?", budget_entry.Id); err != nil {
 				json.AbortWithStatusMessage(ctx, 500, "Internal Error.")
 				return
 			}
@@ -171,33 +167,26 @@ func LoadRoutes(engine *gin.Engine) {
 	})
 	// List user tags
 	engine.GET("/api/argent/tag", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		tags, err := GetUserTags(usr.Id)
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")
 			return
 		}
-		// hydTags, err := HydrateTagsWithTagBudgets(tags)
-		// if err != nil {
-		// 	json.AbortWithStatusMessage(ctx, 500, "Internal error.")
-		// 	return
-		// }
 		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.Tag]{Value: tags})
 	})
 	// List user budgets
 	engine.GET("/api/argent/budget", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		budgets, err := tables.Budget.Get("user_id=?", usr.Id)
 		if err != nil {
@@ -213,12 +202,11 @@ func LoadRoutes(engine *gin.Engine) {
 		ctx.AbortWithStatusJSON(200, json.ValueResponse[[]types.HydBudget]{Value: hydBudgets})
 	})
 	engine.POST("/api/argent/tag/new", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		var body json.TagForm
 		if err := ctx.ShouldBindJSON(&body); err != nil {
@@ -239,12 +227,11 @@ func LoadRoutes(engine *gin.Engine) {
 		json.AbortWithStatusMessage(ctx, 200, fmt.Sprintf("Created tag %v (%v).", body.Name, tag_id))
 	})
 	engine.POST("/api/argent/budget/new", func(ctx *gin.Context) {
-		code, usrs := auth.GetUserFromRequestNew(auth.GetTokenFromRequest(ctx))
+		code, usr := auth.GetUserFromRequest(auth.GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		var body json.BudgetForm
 
@@ -257,9 +244,9 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 		budget_id, err := tables.Budget.New(types.BudgetForm{
-			Name: body.Name,
+			Name:    body.Name,
 			User_Id: usr.Id,
-			Goal: *body.Goal,
+			Goal:    *body.Goal,
 		})
 		if err != nil {
 			json.AbortWithStatusMessage(ctx, 500, "Internal error.")

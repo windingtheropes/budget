@@ -7,9 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/json"
-	"github.com/windingtheropes/budget/types"
 	"github.com/windingtheropes/budget/tables"
+	"github.com/windingtheropes/budget/types"
 )
+
 // Authentication routes
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
@@ -20,7 +21,7 @@ func LoadRoutes(engine *gin.Engine) {
 			return
 		}
 
-		users, err :=  tables.User.Get("email=?", body.Email)
+		users, err := tables.User.Get("email=?", body.Email)
 		if err != nil {
 			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -34,9 +35,9 @@ func LoadRoutes(engine *gin.Engine) {
 		// Password not hashed
 		user_id, err := tables.User.New(types.UserForm{
 			First_Name: body.First_Name,
-			Last_Name: body.Last_Name,
-			Email: body.Email,
-			Password: body.Password,
+			Last_Name:  body.Last_Name,
+			Email:      body.Email,
+			Password:   body.Password,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -67,11 +68,11 @@ func LoadRoutes(engine *gin.Engine) {
 			usr := users[0]
 			if body.Password == usr.Password {
 				token := GenToken(64)
-				_, err :=  tables.Session.New(types.SessionForm{
-					Token: GenToken(64),
+				_, err := tables.Session.New(types.SessionForm{
+					Token:   GenToken(64),
 					User_Id: usr.Id,
-					Expiry: time.Now().Unix() + (60 * 60 * 4),
-				}) 
+					Expiry:  time.Now().Unix() + (60 * 60 * 4),
+				})
 				if err != nil {
 					log.Fatal(err)
 					json.AbortWithStatusMessage(ctx, 500, "Interal error.")
@@ -97,7 +98,7 @@ func LoadRoutes(engine *gin.Engine) {
 
 	// Get info on a session from the enclosed token
 	engine.PUT("/api/account/session", func(ctx *gin.Context) {
-		code, _ := GetUserFromRequestNew(GetTokenFromRequest(ctx))
+		code, _ := GetUserFromRequest(GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
@@ -107,18 +108,17 @@ func LoadRoutes(engine *gin.Engine) {
 
 	// Get user info
 	engine.PUT("/api/account/user", func(ctx *gin.Context) {
-		code, usrs := GetUserFromRequestNew(GetTokenFromRequest(ctx))
+		code, usr := GetUserFromRequest(GetTokenFromRequest(ctx))
 		if code >= 400 {
 			json.AbortWithStatusMessage(ctx, code, "")
 			return
 		}
-		usr := usrs[0]
 
 		ctx.AbortWithStatusJSON(200, json.UserInfoResponse{
-			Id:    usr.Id,
-			First_Name:  usr.First_Name,
-			Last_Name: usr.Last_Name,
-			Email: usr.Email,
+			Id:         usr.Id,
+			First_Name: usr.First_Name,
+			Last_Name:  usr.Last_Name,
+			Email:      usr.Email,
 		})
 	})
 }
