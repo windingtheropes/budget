@@ -149,5 +149,5 @@ type TagBudgetForm struct {
 	Tag_Id    int64 `db:"tag_id"`
 	Budget_Id int64 `db:"budget_id"`
 	Goal      float64 `db:"goal"`
-	Type_Id   int64 `db:"type_id`
+	Type_Id   int64 `db:"type_id"`
 }
