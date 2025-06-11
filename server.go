@@ -14,6 +14,7 @@ import (
 func main() {
 	dotenv.Init()
 	based.InitDB()
+
 	engine := gin.Default()
 	engine.Use(CORSMiddleware())
 	auth.LoadRoutes(engine)
