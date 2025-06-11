@@ -2,13 +2,15 @@ package based
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 )
 
 type Table[Data any, Form any] struct {
-	name              string
-	insertion_snippet string
+	name              string // Table name in the database
+	insertion_snippet string // Snippet for inserting to table, generated from the fields of Form
+	update_snippet   string // Snippet for updating row in table, generated from fields of Form
 }
 
 // Get an array of Data rows from the table by a sql_condition. 
@@ -70,14 +72,8 @@ func (t *Table[Data, Form]) Get(sql_condition string, args... any) ([]Data, erro
 // Add a row from the table given a Form struct
 func (t *Table[Data, Form]) New(row Form) (int64, error) {
 	query_ph := fmt.Sprintf("INSERT INTO %v %v", t.name, t.insertion_snippet)
+	form_vals := getFieldValues(row);
 
-	row_value := reflect.ValueOf(&row).Elem()
-
-	form_vals := make([]interface{}, row_value.NumField())
-	for i := range form_vals {
-		val := row_value.Field(i).Interface()
-		form_vals[i] = val
-	}
 	result, err := DB().Exec(query_ph, form_vals...)
 	if err != nil {
 		return 0, err
@@ -88,6 +84,29 @@ func (t *Table[Data, Form]) New(row Form) (int64, error) {
 	}
 	return id, nil
 }
+// Update a row in the table given a Form struct and an sql_condition to identify it.
+// Returns number of rows affected.
+// 
+// ex. Update(UserForm{userdata}, "id = ?", usr.id)
+func (t *Table[Data, Form]) Update(row Form, sql_condition string, args... any) (int64, error) {
+	query := fmt.Sprintf(`UPDATE %v SET %v WHERE %v`, t.name, t.update_snippet, sql_condition)
+	form_vals := getFieldValues(row);
+	
+	// The number of columns is a known constant for any Table, so the number of replacement args (form_vals) will be the same
+	// We can then safely concatenate the unknown length args to the end of this
+	concat_args := append(form_vals, args...)
+
+	result, err := DB().Exec(query, concat_args...)
+	if err != nil {
+		return 0, err
+	}
+	ra, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return ra, nil
+}
+
 // Delete a row from the table by a sql_condition. Will substitute `?` in order that args are passed.
 // 
 // ex. Delete("id=?",entry_id)
@@ -105,35 +124,49 @@ func (t *Table[Data, Form]) Delete(sql_condition string, args... any) (bool, err
 	return true, nil
 }
 
-// Create a new Table
+func getDbTags[T any](i T) []string {
+	interf_type := reflect.TypeOf(&i).Elem()
+	var db_vals []string;
+	for i := range interf_type.NumField() {
+		field := interf_type.Field(i)
+		db_val := field.Tag.Get("db")
+		if db_val == "" {
+			log.Fatal("no db tag provided on struct")
+		}
+		db_vals = append(db_vals, db_val)
+	}
+	return db_vals
+}
+func getFieldValues[T any](i T) []interface{} {
+	row_value := reflect.ValueOf(&i).Elem()
+	form_vals := make([]interface{}, row_value.NumField())
+	for i := range form_vals {
+		val := row_value.Field(i).Interface()
+		form_vals[i] = val
+	}
+	return form_vals
+}
+
+// Create a new Table representing table `name` in database
 // 
 // Data is the container struct for rows, 
 // the amount of fields must match the amount of columns
 //
-// Form is the struct for creating new rows, should not include the primary key.
-// Form must be annotated with `db:"{column_name}"` tags
-// 
-// `name` is the name of the table in the database
+// Form is the struct for creating new rows, should not include the primary key
+// and must be annotated with `db:"{column_name}"` tags
 func NewTable[Data any, Form any](name string) Table[Data, Form] {
-	var f Form
+	var f Form;
 
-	// Generate the insertion snippet: `(name, password) VALUES (?,?)`
-	// Reflect Form as a type
-	var column_names []string
-	form_type := reflect.TypeOf(&f).Elem()
-	for i := range form_type.NumField() {
-		field := form_type.Field(i)
-		column_name := field.Tag.Get("db")
-		if column_name == "" {
-			panic(fmt.Errorf("no db tag provided on table form struct"))
-		}
-		column_names = append(column_names, column_name)
-	}
-	val_ph := strings.Split(strings.Repeat("?", form_type.NumField()), "")
-	insertion_snippet := fmt.Sprintf("(%v) VALUES (%v)", strings.Join(column_names, ","), strings.Join(val_ph, ","))
-
+	// Insertion snippet (from Form) -> (name) VALUES (?)
+	form_columns := getDbTags(f)
+	insertion_snippet := fmt.Sprintf("(%v) VALUES (%v)", strings.Join(form_columns, ","), strings.Join(strings.Split(strings.Repeat("?",len(form_columns)),""), ","))
+	
+	// Update snippet (from Data) -> name=?,something=?
+	update_snippet := strings.Join(form_columns, "=?,") + "=?"
+	
 	return Table[Data, Form]{
 		name,
 		insertion_snippet,
+		update_snippet,
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/windingtheropes/budget/types"
 	"github.com/windingtheropes/budget/tables"
 )
-
 // Authentication routes
 func LoadRoutes(engine *gin.Engine) {
 	// New Account
