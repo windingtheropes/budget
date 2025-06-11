@@ -2,6 +2,7 @@ package argent
 
 import (
 	"github.com/windingtheropes/budget/types"
+	"github.com/windingtheropes/budget/tables"
 )
 
 func HydrateTransactions(transactions []types.TransactionEntry) ([]types.HydTransactionEntry, error) {
@@ -12,7 +13,7 @@ func HydrateTransactions(transactions []types.TransactionEntry) ([]types.HydTran
 		if err != nil {
 			return nil, err
 		}
-		budget_entries, err := BudgetEntryTable.Get("transaction_id=?",transaction.Id)
+		budget_entries, err := tables.BudgetEntry.Get("transaction_id=?",transaction.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +37,7 @@ func HydrateTagsWithTagBudgets(tags []types.Tag) ([]types.HydTag, error) {
 	var hydratedTags []types.HydTag
 	for i := range tags {
 		tag := tags[i]
-		tagBudgets, err := TagBudgetTable.Get("tag_id=?", tag.Id)
+		tagBudgets, err := tables.TagBudget.Get("tag_id=?", tag.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +54,7 @@ func HydrateBudgetsWithTagBudgets(budgets []types.Budget) ([]types.HydBudget, er
 	var hydratedBudgets []types.HydBudget
 	for i := range budgets {
 		budget := budgets[i]
-		tagBudgets, err := TagBudgetTable.Get("budget_id=?", budget.Id)
+		tagBudgets, err := tables.TagBudget.Get("budget_id=?", budget.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +71,7 @@ func HydrateBudgetsWithTagBudgets(budgets []types.Budget) ([]types.HydBudget, er
 func AddTagsById(transaction_id int64, tag_ids []int64) error {
 	// var assignment_ids []int64;
 	for i := range tag_ids {
-		_, err := TagAssignmentTable.New(types.TagAssignmentForm{
+		_, err := tables.TagAssignment.New(types.TagAssignmentForm{
 			Tag_Id:         tag_ids[i],
 			Transaction_Id: transaction_id,
 		})

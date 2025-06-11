@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/windingtheropes/budget/types"
 	"github.com/windingtheropes/budget/json"
+	"github.com/windingtheropes/budget/tables"
 )
 
 // Parse the token from the http authorization header
@@ -21,7 +22,7 @@ func GetTokenFromRequest(ctx *gin.Context) string {
 
 // Authentication middleware, returns either ([200], [user]), ([4-5xx], nil)
 func GetUserFromRequestNew(token string) (int, []types.User) {
-	s, err := SessionTable.Get("token=?", token)
+	s, err := tables.Session.Get("token=?", token)
 	if err != nil {
 		return 500, nil
 	}
@@ -34,7 +35,7 @@ func GetUserFromRequestNew(token string) (int, []types.User) {
 		// Token expired
 		return 403, nil
 	}
-	usrs, err := UserTable.Get("id=?", session.User_Id)
+	usrs, err := tables.User.Get("id=?", session.User_Id)
 	if err != nil {
 		return 500, nil
 	}
