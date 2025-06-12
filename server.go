@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-sql-driver/mysql"
 	"github.com/windingtheropes/budget/argent"
 	"github.com/windingtheropes/budget/auth"
 	"github.com/windingtheropes/budget/based"
@@ -13,7 +14,14 @@ import (
 
 func main() {
 	dotenv.Init()
-	based.InitDB()
+	// Capture connection properties.
+	based.InitDB(mysql.Config{
+        User:   os.Getenv("DBUSER"),
+        Passwd: os.Getenv("DBPASS"),
+        Net:    "tcp",
+        Addr:   os.Getenv("DBADDR"),
+        DBName: os.Getenv("DB"),
+    })
 
 	engine := gin.Default()
 	engine.Use(CORSMiddleware())

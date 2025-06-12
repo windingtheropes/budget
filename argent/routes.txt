@@ -1,0 +1,20 @@
+GET /api/transaction/entry
+POST /api/argent/transaction/new
+PUT /api/argent/transaction/edit
+DELETE /api/argent/transaction/delete
+
+GET /api/argent/tag
+POST /api/argent/tag/new
+PUT /api/argent/tag/edit
+DELETE /api/argent/tag/delete
+
+GET /api/argent/budget
+POST /api/argent/budget/new
+PUT /api/argent/budget/edit
+DELETE /api/argent/budget/delete
+
+UNAUTHENTICATED/STATIC ROUTES
+
+GET /api/argent/currency/exchange
+GET /api/argent/currency
+GET /api/argent/type
