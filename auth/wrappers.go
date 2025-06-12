@@ -45,5 +45,5 @@ func GetUserFromRequest(token string) (int, types.User) {
 		// User doesn't exist
 		return 403, usr
 	}
-	return 200, usr
+	return 200, usrs[0]
 }

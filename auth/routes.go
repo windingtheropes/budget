@@ -56,29 +56,26 @@ func LoadRoutes(engine *gin.Engine) {
 			json.AbortWithStatusMessage(ctx, 400, "Invalid JSON.")
 			return
 		}
-
+		
 		// catch unknown errors
 		users, err := tables.User.Get("email=?", body.Email)
 		if err != nil {
-			log.Fatal(err)
 			json.AbortWithStatusMessage(ctx, 500, "Interal error.")
 			return
 		}
-		if len(users) == 1 {
+		if len(users) > 0 {
 			usr := users[0]
 			if body.Password == usr.Password {
 				token := GenToken(64)
-				_, err := tables.Session.New(types.SessionForm{
-					Token:   GenToken(64),
+				if _, err := tables.Session.New(types.SessionForm{
+					Token:   token,
 					User_Id: usr.Id,
 					Expiry:  time.Now().Unix() + (60 * 60 * 4),
-				})
-				if err != nil {
-					log.Fatal(err)
+				}); err != nil {
 					json.AbortWithStatusMessage(ctx, 500, "Interal error.")
 					return
 				}
-
+				
 				ctx.AbortWithStatusJSON(200, json.SessionResponse{
 					Code:  200,
 					Token: token,
