@@ -3,7 +3,6 @@ package based
 import (
 	"github.com/go-sql-driver/mysql"
 	"database/sql"
-	"os"
 	"fmt"
 	"log"
 )
@@ -17,16 +16,7 @@ func DB() *sql.DB {
     return db
 }
 
-func InitDB()  {
-    // Capture connection properties.
-    cfg := mysql.Config{
-        User:   os.Getenv("DBUSER"),
-        Passwd: os.Getenv("DBPASS"),
-        Net:    "tcp",
-        Addr:   os.Getenv("DBADDR"),
-        DBName: os.Getenv("DB"),
-    }
-    
+func InitDB(cfg mysql.Config)  {
     // Get a database handle.
     var err error
     db, err = sql.Open("mysql", cfg.FormatDSN())
