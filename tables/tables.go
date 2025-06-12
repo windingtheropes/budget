@@ -6,7 +6,7 @@ import (
 )
 
 var User = based.NewTable[types.User, types.UserForm]("usr")
-var Session = based.NewTable[types.Session, types.SessionForm]("usr")
+var Session = based.NewTable[types.Session, types.SessionForm]("session")
 var TagBudget = based.NewTable[types.TagBudget, types.TagBudgetForm]("tag_budget")
 var Budget = based.NewTable[types.Budget, types.BudgetForm]("budget")
 var BudgetEntry = based.NewTable[types.BudgetEntry, types.BudgetEntryForm]("budget_entry")
